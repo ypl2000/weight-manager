@@ -10,10 +10,11 @@
 
     <p v-if="!S.online" class="banner warn">当前离线:AI 解读与提问都需要联网,请联网后再试。</p>
 
-    <!-- 双列容器:仅宽屏(≥1024px)生效为左右两列;手机端是普通 div,单列顺序与原来完全一致
+    <!-- 双列容器:仅宽屏(≥1024px)两列并排,列间高度均衡由 balance.js 感知分配;
+         手机端是普通 div 且卡片会被恢复原始顺序,单列顺序与原来完全一致
          左列:生成解读 / 问教练(含回答区)   右列:问答历史 / 历史解读 -->
-    <div class="cols">
-      <div class="col">
+    <div class="cols" ref="colsEl">
+      <div class="col" ref="colA">
         <!-- 生成 -->
         <section class="card">
           <h2>生成解读</h2>
@@ -51,7 +52,7 @@
         </section>
       </div>
 
-      <div class="col">
+      <div class="col" ref="colB">
         <!-- 问答历史 -->
         <section class="card">
           <div class="row">
@@ -112,8 +113,16 @@
 import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { S, fmtLocal, toast } from '../store'
 import { api, pin, queueWrite } from '../sync'
+import { useBalancedCols } from '../balance'
 
 const DAY_OPTIONS = [7, 30, 90]
+
+// ---- 宽屏双列高度均衡:≥1024px 感知分配,<1024px 自动恢复原始顺序 ----
+// 流式解读/回答会让"生成解读/问教练"卡明显长高,流结束后手动补一次平衡
+const colsEl = ref(null)
+const colA = ref(null)
+const colB = ref(null)
+const { refresh: rebalanceCols } = useBalancedCols(colsEl, [colA, colB])
 
 // ---- 轻量 Markdown 渲染 ----
 // 模型输出是 markdown,按纯文本会把井号/星号原样显示出来。
@@ -286,6 +295,7 @@ async function generate() {
     }
   } finally {
     generating.value = false
+    rebalanceCols() // 解读流结束,卡片高度落定,补一次列平衡
   }
 }
 
@@ -364,6 +374,7 @@ async function askCoach() {
     }
   } finally {
     asking.value = false
+    rebalanceCols() // 回答流结束,卡片高度落定,补一次列平衡
   }
 }
 

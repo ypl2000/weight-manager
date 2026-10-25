@@ -279,12 +279,17 @@ ul.plain li { margin: 3px 0; font-size: 14px; }
     box-shadow: 0 10px 28px rgba(15, 23, 42, 0.18), 0 2px 8px rgba(15, 23, 42, 0.08);
   }
 
-  /* 3) 双列容器(今日页 / AI 教练页):手机端是普通 div,宽屏变左右两列 */
+  /* 3) 双列容器(今日页 / AI 教练页):手机端是普通 div,宽屏两列并排、等宽。
+        列间高度均衡交给 JS(src/balance.js 感知分配):实测 Chrome 对无约束高度的
+        CSS 多列不做均衡,grid 1fr 1fr 又会把内容长度差变成高度差,均弃用 */
   .cols {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0 14px;
-    align-items: start;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  .cols .col {
+    flex: 1;
+    min-width: 0;
   }
 
   /* 5) 设置页:分区两列排布(dense 自动回填空位),「关于」分区保持通栏 */

@@ -15,10 +15,11 @@
       </div>
     </template>
 
-    <!-- 双列容器:仅宽屏(≥1024px)生效为左右两列;手机端是普通 div,单列顺序与原来完全一致
+    <!-- 双列容器:仅宽屏(≥1024px)两列并排,列间高度均衡由 balance.js 感知分配;
+         手机端是普通 div 且卡片会被恢复原始顺序,单列顺序与原来完全一致
          左列:阶段卡 / 快捷记录 / 智能提示   右列:今日打卡 / 本阶段训练要点 / AI 教练入口 -->
-    <div class="cols">
-      <div class="col">
+    <div class="cols" ref="colsEl">
+      <div class="col" ref="colA">
         <section class="card stage-card" :style="cur ? { borderLeftColor: cur.color } : {}">
           <div class="row">
             <span class="chip">当前阶段</span>
@@ -77,7 +78,7 @@
         </section>
       </div>
 
-      <div class="col">
+      <div class="col" ref="colB">
         <section class="card">
           <div class="row">
             <h2 style="margin: 0">今日打卡</h2>
@@ -127,6 +128,7 @@ import {
   habits, rows, today, fmtLocal, toast,
 } from '../store'
 import { api, queueWrite, syncNow } from '../sync'
+import { useBalancedCols } from '../balance'
 
 const route = useRoute()
 const w = ref('')
@@ -221,10 +223,19 @@ const habitRate = computed(() => {
   return Math.round((done / (hs.length * 7)) * 100)
 })
 
+// ---- 宽屏双列高度均衡:≥1024px 由 balance.js 感知分配;<1024px 自动恢复原始顺序 ----
+const colsEl = ref(null)
+const colA = ref(null)
+const colB = ref(null)
+const { refresh: rebalanceCols } = useBalancedCols(colsEl, [colA, colB])
+
 async function loadSug() {
   try {
     const res = await fetch('/api/stage-suggestion')
-    if (res.ok) sug.value = await res.json()
+    if (res.ok) {
+      sug.value = await res.json()
+      rebalanceCols() // 建议横幅出现/消失会改变阶段卡高度,补一次平衡
+    }
   } catch { /* 离线时忽略 */ }
 }
 
@@ -262,6 +273,8 @@ async function loadInsights() {
     insights.value = res.ok ? await res.json() : null
   } catch {
     insights.value = null // 离线/未解锁/服务端异常:静默,整卡不显示
+  } finally {
+    rebalanceCols() // 智能提示卡出现/消失会改变左列高度,补一次平衡
   }
 }
 
