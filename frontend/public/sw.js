@@ -1,4 +1,4 @@
-const CACHE = 'wm-cache-v1'
+const CACHE = 'wm-cache-v2'
 
 self.addEventListener('install', (e) => {
   self.skipWaiting()
