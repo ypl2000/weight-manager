@@ -10,13 +10,14 @@ import json
 from pathlib import Path
 
 from fastapi import FastAPI, Request, UploadFile, File, HTTPException
-from fastapi.responses import JSONResponse, FileResponse, Response
+from fastapi.responses import JSONResponse, FileResponse, Response, StreamingResponse
 
 import store
 import seed
 import engine
 import recognize
 import importers
+import coach
 
 app = FastAPI(title="体重管理")
 DIST = Path(__file__).resolve().parent.parent / "frontend" / "dist"
@@ -280,6 +281,36 @@ async def import_commit(request: Request):
                              store.now_iso(), False, "import")
             imported += 1
     return {"imported": imported, "skipped": skipped}
+
+
+# ---------- AI 教练(迭代2) ----------
+
+@app.post("/api/coach/report")
+async def coach_report(request: Request):
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    try:
+        days = max(1, min(int(body.get("days") or 30), 365))
+    except (TypeError, ValueError):
+        days = 30
+
+    async def gen():
+        async for ev in coach.stream_report(days):
+            if "delta" in ev:
+                payload = {"delta": ev["delta"]}
+            elif "error" in ev:
+                payload = {"error": ev["error"]}
+            elif ev.get("done"):
+                payload = {"done": True, "report_id": ev["report_id"]}
+            else:
+                continue
+            yield "data: " + json.dumps(payload, ensure_ascii=False) + "\n\n"
+
+    return StreamingResponse(gen(), media_type="text/event-stream",
+                             headers={"Cache-Control": "no-cache",
+                                      "X-Accel-Buffering": "no"})
 
 
 # ---------- 前端静态页面 ----------

@@ -64,6 +64,17 @@
       </ul>
       <router-link to="/training" class="link">去训练打卡 →</router-link>
     </section>
+
+    <!-- AI 教练入口 -->
+    <section class="card">
+      <div class="row">
+        <div>
+          <b>🤖 AI 教练解读</b>
+          <p class="muted" style="margin: 2px 0 0">基于近期体重与打卡数据,生成 AI 阶段报告</p>
+        </div>
+        <router-link to="/coach" class="link" style="margin-top: 0; white-space: nowrap">进入 →</router-link>
+      </div>
+    </section>
   </div>
 </template>
 

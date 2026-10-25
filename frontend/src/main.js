@@ -10,6 +10,7 @@ const routes = [
   { path: '/data', component: () => import('./views/Data.vue') },
   { path: '/stage', component: () => import('./views/Stage.vue') },
   { path: '/training', component: () => import('./views/Training.vue') },
+  { path: '/coach', component: () => import('./views/Coach.vue') },
   { path: '/settings', component: () => import('./views/Settings.vue') },
 ]
 
