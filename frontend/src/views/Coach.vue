@@ -10,93 +10,101 @@
 
     <p v-if="!S.online" class="banner warn">当前离线:AI 解读与提问都需要联网,请联网后再试。</p>
 
-    <!-- 生成 -->
-    <section class="card">
-      <h2>生成解读</h2>
-      <div class="seg">
-        <button
-          v-for="d in DAY_OPTIONS" :key="d"
-          :class="{ on: days === d }"
-          :disabled="generating"
-          @click="days = d"
-        >近{{ d }}天</button>
-      </div>
-      <button style="width: 100%" :disabled="generating || asking || !S.online" @click="generate">
-        {{ generating ? '生成中…(含思考约需 30-60 秒)' : '生成 AI 解读' }}
-      </button>
+    <!-- 双列容器:仅宽屏(≥1024px)生效为左右两列;手机端是普通 div,单列顺序与原来完全一致
+         左列:生成解读 / 问教练(含回答区)   右列:问答历史 / 历史解读 -->
+    <div class="cols">
+      <div class="col">
+        <!-- 生成 -->
+        <section class="card">
+          <h2>生成解读</h2>
+          <div class="seg">
+            <button
+              v-for="d in DAY_OPTIONS" :key="d"
+              :class="{ on: days === d }"
+              :disabled="generating"
+              @click="days = d"
+            >近{{ d }}天</button>
+          </div>
+          <button style="width: 100%" :disabled="generating || asking || !S.online" @click="generate">
+            {{ generating ? '生成中…(含思考约需 30-60 秒)' : '生成 AI 解读' }}
+          </button>
 
-      <p v-if="errMsg" class="banner warn">{{ errMsg }}</p>
-      <p v-else-if="partial" class="banner">生成中断:以下内容可能不完整。</p>
+          <p v-if="errMsg" class="banner warn">{{ errMsg }}</p>
+          <p v-else-if="partial" class="banner">生成中断:以下内容可能不完整。</p>
 
-      <div v-if="content || generating" ref="reportBox" class="report"><span v-html="renderMd(content)"></span><span v-if="generating" class="caret">▍</span></div>
-    </section>
+          <div v-if="content || generating" ref="reportBox" class="report"><span v-html="renderMd(content)"></span><span v-if="generating" class="caret">▍</span></div>
+        </section>
 
-    <!-- 问教练 -->
-    <section class="card">
-      <h2>问教练</h2>
-      <textarea
-        v-model="question"
-        :disabled="asking"
-        placeholder="问点什么，比如：间歇性断食值得做吗？"
-      ></textarea>
-      <p v-if="askErr" class="banner warn">{{ askErr }}</p>
-      <button style="width: 100%; margin-top: 8px" :disabled="asking || generating || !S.online" @click="askCoach">
-        {{ asking ? '思考中…约需 15-40 秒' : '提问' }}
-      </button>
-      <div v-if="answer || asking" ref="askBox" class="report">{{ answer }}<span v-if="asking" class="caret">▍</span></div>
-    </section>
+        <!-- 问教练 -->
+        <section class="card">
+          <h2>问教练</h2>
+          <textarea
+            v-model="question"
+            :disabled="asking"
+            placeholder="问点什么，比如：间歇性断食值得做吗？"
+          ></textarea>
+          <p v-if="askErr" class="banner warn">{{ askErr }}</p>
+          <button style="width: 100%; margin-top: 8px" :disabled="asking || generating || !S.online" @click="askCoach">
+            {{ asking ? '思考中…约需 15-40 秒' : '提问' }}
+          </button>
+          <div v-if="answer || asking" ref="askBox" class="report">{{ answer }}<span v-if="asking" class="caret">▍</span></div>
+        </section>
+      </div>
 
-    <!-- 问答历史 -->
-    <section class="card">
-      <div class="row">
-        <h2 style="margin: 0">问答历史</h2>
-        <button class="small ghost" :disabled="qaLoading" @click="loadQa">
-          {{ qaLoading ? '刷新中…' : '刷新' }}
-        </button>
-      </div>
-      <p v-if="!qaList.length && !qaLoading" class="muted" style="margin-top: 10px">
-        还没有提问过。有减肥困惑,直接问教练。
-      </p>
-      <div v-for="qa in qaList" :key="qa.id" class="hist-item">
-        <div class="row hist-head" @click="toggleQa(qa.id)">
-          <span class="hist-meta">
-            <b class="q-text">Q: {{ qa.data.question }}</b>
-            <span class="muted">{{ fmtLocal(qa.data.at) }}<template v-if="qa.data.model"> · {{ qa.data.model }}</template></span>
-          </span>
-          <span class="hist-ops">
-            <span class="muted" style="font-size: 12px">{{ qaExpanded[qa.id] ? '收起 ▴' : '展开 ▾' }}</span>
-            <button class="small danger" @click.stop="delQa(qa)">删</button>
-          </span>
-        </div>
-        <div v-if="qaExpanded[qa.id]" class="report" v-html="renderMd(qa.data.answer)"></div>
-      </div>
-    </section>
+      <div class="col">
+        <!-- 问答历史 -->
+        <section class="card">
+          <div class="row">
+            <h2 style="margin: 0">问答历史</h2>
+            <button class="small ghost" :disabled="qaLoading" @click="loadQa">
+              {{ qaLoading ? '刷新中…' : '刷新' }}
+            </button>
+          </div>
+          <p v-if="!qaList.length && !qaLoading" class="muted" style="margin-top: 10px">
+            还没有提问过。有减肥困惑,直接问教练。
+          </p>
+          <div v-for="qa in qaList" :key="qa.id" class="hist-item">
+            <div class="row hist-head" @click="toggleQa(qa.id)">
+              <span class="hist-meta">
+                <b class="q-text">Q: {{ qa.data.question }}</b>
+                <span class="muted">{{ fmtLocal(qa.data.at) }}<template v-if="qa.data.model"> · {{ qa.data.model }}</template></span>
+              </span>
+              <span class="hist-ops">
+                <span class="muted" style="font-size: 12px">{{ qaExpanded[qa.id] ? '收起 ▴' : '展开 ▾' }}</span>
+                <button class="small danger" @click.stop="delQa(qa)">删</button>
+              </span>
+            </div>
+            <div v-if="qaExpanded[qa.id]" class="report" v-html="renderMd(qa.data.answer)"></div>
+          </div>
+        </section>
 
-    <!-- 历史 -->
-    <section class="card">
-      <div class="row">
-        <h2 style="margin: 0">历史解读</h2>
-        <button class="small ghost" :disabled="histLoading" @click="loadHistory">
-          {{ histLoading ? '刷新中…' : '刷新' }}
-        </button>
+        <!-- 历史 -->
+        <section class="card">
+          <div class="row">
+            <h2 style="margin: 0">历史解读</h2>
+            <button class="small ghost" :disabled="histLoading" @click="loadHistory">
+              {{ histLoading ? '刷新中…' : '刷新' }}
+            </button>
+          </div>
+          <p v-if="!history.length && !histLoading" class="muted" style="margin-top: 10px">
+            还没有生成过解读。记录体重和打卡几天后,让 AI 教练帮你读数据。
+          </p>
+          <div v-for="h in history" :key="h.id" class="hist-item">
+            <div class="row hist-head" @click="toggle(h.id)">
+              <span class="hist-meta">
+                <span v-if="h.data.days" class="pill">近{{ h.data.days }}天</span>
+                <span class="muted">{{ fmtLocal(h.data.at) }}<template v-if="h.data.model"> · {{ h.data.model }}</template></span>
+              </span>
+              <span class="hist-ops">
+                <span class="muted" style="font-size: 12px">{{ expanded[h.id] ? '收起 ▴' : '展开 ▾' }}</span>
+                <button class="small danger" @click.stop="delReport(h)">删</button>
+              </span>
+            </div>
+            <div v-if="expanded[h.id]" class="report" v-html="renderMd(h.data.content)"></div>
+          </div>
+        </section>
       </div>
-      <p v-if="!history.length && !histLoading" class="muted" style="margin-top: 10px">
-        还没有生成过解读。记录体重和打卡几天后,让 AI 教练帮你读数据。
-      </p>
-      <div v-for="h in history" :key="h.id" class="hist-item">
-        <div class="row hist-head" @click="toggle(h.id)">
-          <span class="hist-meta">
-            <span v-if="h.data.days" class="pill">近{{ h.data.days }}天</span>
-            <span class="muted">{{ fmtLocal(h.data.at) }}<template v-if="h.data.model"> · {{ h.data.model }}</template></span>
-          </span>
-          <span class="hist-ops">
-            <span class="muted" style="font-size: 12px">{{ expanded[h.id] ? '收起 ▴' : '展开 ▾' }}</span>
-            <button class="small danger" @click.stop="delReport(h)">删</button>
-          </span>
-        </div>
-        <div v-if="expanded[h.id]" class="report" v-html="renderMd(h.data.content)"></div>
-      </div>
-    </section>
+    </div>
   </div>
 </template>
 

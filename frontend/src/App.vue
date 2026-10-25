@@ -71,8 +71,46 @@ async function unlock() {
   }
 }
 
+// ---- 测量提醒:桌面通知(每 30 分钟检查一次) ----
+// PWA 无推送服务,通知只能在应用打开期间弹出;开关与授权入口在 设置 → 测量提醒
+const REMIND_MS = 30 * 60 * 1000
+let remindTimer = null
+
+function localDateStr() {
+  const d = new Date()
+  const p = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
+}
+
+async function checkReminders() {
+  try {
+    if (localStorage.getItem('wmNotify') !== '1') return // 未开启桌面通知
+    if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return
+    const res = await fetch('/api/reminders', {
+      headers: pin() ? { 'X-Access-Code': pin() } : {},
+    })
+    if (!res.ok) return
+    const data = await res.json()
+    const ds = localDateStr()
+    for (const r of data.items || []) {
+      if (!r || !r.due) continue
+      const key = `wmNotified_${r.code}`
+      if (localStorage.getItem(key) === ds) continue // 今天已为该指标发过,不重复
+      localStorage.setItem(key, ds)
+      try {
+        const n = new Notification('体重管理', { body: `${r.name}：${r.reason}` })
+        n.onclick = () => {
+          try { window.focus() } catch { /* 部分浏览器无 Service Worker 时 onclick 受限,忽略 */ }
+        }
+      } catch { /* 系统层面创建通知失败(如系统级禁用),忽略 */ }
+    }
+  } catch { /* 离线/服务端未开:静默 */ }
+}
+
 onMounted(async () => {
   initSync()
+  checkReminders()
+  remindTimer = setInterval(checkReminders, REMIND_MS)
   window.addEventListener('wm-synced', scheduleRefresh)
   window.addEventListener('wm-local', scheduleRefresh)
   window.addEventListener('wm-toast', showToast)
@@ -89,5 +127,6 @@ onMounted(async () => {
 
 onUnmounted(() => {
   window.removeEventListener('wm-toast', showToast)
+  clearInterval(remindTimer)
 })
 </script>

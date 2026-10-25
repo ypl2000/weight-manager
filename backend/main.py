@@ -19,6 +19,7 @@ import recognize
 import importers
 import coach
 import insights
+import reminders
 
 app = FastAPI(title="体重管理")
 DIST = Path(__file__).resolve().parent.parent / "frontend" / "dist"
@@ -201,6 +202,13 @@ def stage_suggestion(window: int = 14):
 @app.get("/api/insights")
 def insights_api():
     return insights.build()
+
+
+# ---------- 测量提醒(迭代4,纯读取不写数据) ----------
+
+@app.get("/api/reminders")
+def reminders_api():
+    return reminders.build()
 
 
 # ---------- 图片识别 ----------

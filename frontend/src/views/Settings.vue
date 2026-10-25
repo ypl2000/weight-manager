@@ -1,5 +1,5 @@
 <template>
-  <div class="page">
+  <div class="page settings-page">
     <header class="page-head">
       <div><h1>设置</h1><p class="sub">资料 · 配置管理 · 同步 · 数据安全</p></div>
     </header>
@@ -119,6 +119,28 @@
           <button class="ghost" @click="resetCursor">重置游标(全量重拉)</button>
         </div>
         <p class="muted">原理:本地优先读写,联网后把各自变更按"更新时间新者胜"合并,删除用软删除防止误覆盖。</p>
+      </div>
+    </details>
+
+    <!-- 测量提醒 -->
+    <details class="sec">
+      <summary>测量提醒(桌面通知)</summary>
+      <div class="body">
+        <p class="muted">
+          体重、腰围等到期未测时,今日页顶部会显示提醒横幅;开启桌面通知后,应用打开期间每 30 分钟检查一次并弹系统通知,同一指标每天只弹一次。
+        </p>
+        <p class="muted">通知仅在应用打开时弹出(本地 PWA 无推送服务,页面关了就收不到)。</p>
+        <div class="row">
+          <button :class="{ ghost: notifyOn }" @click="toggleNotify">
+            {{ notifyOn ? '已开启桌面通知(点击关闭)' : '开启桌面通知' }}
+          </button>
+        </div>
+        <p v-if="notifyUnsupported" class="banner warn" style="margin: 8px 0 0">
+          当前浏览器不支持桌面通知(部分手机浏览器无此能力),仍可使用今日页的提醒横幅。
+        </p>
+        <p v-else-if="notifyDenied" class="banner warn" style="margin: 8px 0 0">
+          浏览器拦截了通知权限:请在地址栏附近的站点设置里把"通知"改为允许,再回来重试。
+        </p>
       </div>
     </details>
 
@@ -354,6 +376,43 @@ async function resetCursor() {
   await kvSet('cursor', 0)
   await syncNow()
   toast('游标已重置并重新同步')
+}
+
+// ---- 测量提醒桌面通知 ----
+// 开关只落在 localStorage(wmNotify=1),真正的弹窗逻辑在 App.vue 里每 30 分钟检查一次
+const notifyOn = ref(false)
+const notifyDenied = ref(false)
+const notifyUnsupported = typeof Notification === 'undefined'
+
+onMounted(() => {
+  notifyOn.value = localStorage.getItem('wmNotify') === '1'
+})
+
+async function toggleNotify() {
+  if (notifyOn.value) {
+    // 再点可关闭:只清本地标记;浏览器授权不撤回(浏览器也不允许页面撤回)
+    localStorage.removeItem('wmNotify')
+    notifyOn.value = false
+    notifyDenied.value = false
+    toast('桌面通知已关闭')
+    return
+  }
+  if (notifyUnsupported) return
+  let perm = Notification.permission
+  if (perm === 'default') {
+    try {
+      perm = await Notification.requestPermission()
+    } catch { perm = 'denied' }
+  }
+  if (perm === 'granted') {
+    localStorage.setItem('wmNotify', '1')
+    notifyOn.value = true
+    notifyDenied.value = false
+    toast('桌面通知已开启')
+  } else {
+    notifyDenied.value = true
+    toast('浏览器拦截了通知权限')
+  }
 }
 
 // ---- 访问码 ----

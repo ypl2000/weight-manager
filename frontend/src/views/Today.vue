@@ -8,99 +8,114 @@
       <span class="sync-dot" :class="syncClass" @click="manualSync">{{ syncText }}</span>
     </header>
 
-    <section class="card stage-card" :style="cur ? { borderLeftColor: cur.color } : {}">
-      <div class="row">
-        <span class="chip">当前阶段</span>
-        <b>{{ cur ? cur.name : '未设置' }}</b>
+    <!-- 测量提醒:有到期未测的指标时,横幅列表显示在页面最顶部(阶段卡片之上),全部完成后消失 -->
+    <template v-if="dueReminders.length">
+      <div v-for="r in dueReminders" :key="r.code" class="banner warn">
+        <span>{{ remindText(r) }}</span>
       </div>
-      <p class="muted" v-if="cur">{{ cur.summary }}</p>
-      <div v-if="sug && cur && sug.suggested && sug.suggested !== cur._id" class="banner">
-        <span>系统建议进入「{{ stageName(sug.suggested) }}」</span>
-        <button class="small" @click="applyStage(sug.suggested, 'auto')">应用</button>
-      </div>
-      <router-link to="/stage" class="link">查看判定依据与规则 →</router-link>
-    </section>
+    </template>
 
-    <section class="card">
-      <h2>快捷记录</h2>
-      <div class="quick">
-        <input type="number" step="0.1" v-model="w" placeholder="体重 kg" inputmode="decimal" />
-        <button @click="saveWeight" :disabled="!w">保存</button>
-      </div>
-      <p class="muted" style="margin-top: 8px">
-        <template v-if="lastWeight">上次:{{ lastWeight.value }} kg · {{ fmtLocal(lastWeight.at) }}</template>
-        <template v-else>还没有体重记录</template>
-      </p>
-      <p v-if="bmiVal !== null" class="muted">BMI {{ bmiVal }}{{ bmiLabel }}</p>
-      <p v-if="whrVal !== null" class="muted">腰臀比 {{ whrVal }}{{ whrLabel }}</p>
-      <div class="row" style="margin-top: 8px">
-        <router-link to="/data" class="link">全部指标录入 →</router-link>
-        <router-link to="/data?tab=camera" class="link">📷 拍照识别 →</router-link>
-      </div>
-    </section>
+    <!-- 双列容器:仅宽屏(≥1024px)生效为左右两列;手机端是普通 div,单列顺序与原来完全一致
+         左列:阶段卡 / 快捷记录 / 智能提示   右列:今日打卡 / 本阶段训练要点 / AI 教练入口 -->
+    <div class="cols">
+      <div class="col">
+        <section class="card stage-card" :style="cur ? { borderLeftColor: cur.color } : {}">
+          <div class="row">
+            <span class="chip">当前阶段</span>
+            <b>{{ cur ? cur.name : '未设置' }}</b>
+          </div>
+          <p class="muted" v-if="cur">{{ cur.summary }}</p>
+          <div v-if="sug && cur && sug.suggested && sug.suggested !== cur._id" class="banner">
+            <span>系统建议进入「{{ stageName(sug.suggested) }}」</span>
+            <button class="small" @click="applyStage(sug.suggested, 'auto')">应用</button>
+          </div>
+          <router-link to="/stage" class="link">查看判定依据与规则 →</router-link>
+        </section>
 
-    <!-- 智能提示 -->
-    <section class="card" v-if="hasInsight">
-      <h2>智能提示</h2>
-      <div v-if="insights.rate_alert" class="banner warn">
-        <span>⚠️ {{ insights.rate_alert.message }}</span>
-      </div>
-      <div
-        v-if="insights.plateau"
-        class="banner"
-        :class="insights.plateau.type === 'true_plateau' ? 'warn' : 'info'"
-      >
-        <div class="banner-body">
-          <div>{{ insights.plateau.message }}</div>
-          <div class="muted" style="font-size: 12px; margin-top: 2px">真假平台期判读依据见 AI 教练</div>
-        </div>
-      </div>
-      <template v-if="insights.protein">
-        <h3>今日蛋白质目标</h3>
-        <div class="protein-line">
-          <span><b class="protein-num">{{ insights.protein.target_g }}</b> g/天</span>
-          <span v-if="insights.protein.food_hint" class="pill">{{ insights.protein.food_hint }}</span>
-        </div>
-        <p v-if="insights.protein.note" class="muted" style="margin: 2px 0 0">{{ insights.protein.note }}</p>
-      </template>
-    </section>
+        <section class="card">
+          <h2>快捷记录</h2>
+          <div class="quick">
+            <input type="number" step="0.1" v-model="w" placeholder="体重 kg" inputmode="decimal" />
+            <button @click="saveWeight" :disabled="!w">保存</button>
+          </div>
+          <p class="muted" style="margin-top: 8px">
+            <template v-if="lastWeight">上次:{{ lastWeight.value }} kg · {{ fmtLocal(lastWeight.at) }}</template>
+            <template v-else>还没有体重记录</template>
+          </p>
+          <p v-if="bmiVal !== null" class="muted">BMI {{ bmiVal }}{{ bmiLabel }}</p>
+          <p v-if="whrVal !== null" class="muted">腰臀比 {{ whrVal }}{{ whrLabel }}</p>
+          <div class="row" style="margin-top: 8px">
+            <router-link to="/data" class="link">全部指标录入 →</router-link>
+            <router-link to="/data?tab=camera" class="link">📷 拍照识别 →</router-link>
+          </div>
+        </section>
 
-    <section class="card">
-      <div class="row">
-        <h2 style="margin: 0">今日打卡</h2>
-        <span class="muted">7天坚持率 {{ habitRate }}%</span>
+        <!-- 智能提示 -->
+        <section class="card" v-if="hasInsight">
+          <h2>智能提示</h2>
+          <div v-if="insights.rate_alert" class="banner warn">
+            <span>⚠️ {{ insights.rate_alert.message }}</span>
+          </div>
+          <div
+            v-if="insights.plateau"
+            class="banner"
+            :class="insights.plateau.type === 'true_plateau' ? 'warn' : 'info'"
+          >
+            <div class="banner-body">
+              <div>{{ insights.plateau.message }}</div>
+              <div class="muted" style="font-size: 12px; margin-top: 2px">真假平台期判读依据见 AI 教练</div>
+            </div>
+          </div>
+          <template v-if="insights.protein">
+            <h3>今日蛋白质目标</h3>
+            <div class="protein-line">
+              <span><b class="protein-num">{{ insights.protein.target_g }}</b> g/天</span>
+              <span v-if="insights.protein.food_hint" class="pill">{{ insights.protein.food_hint }}</span>
+            </div>
+            <p v-if="insights.protein.note" class="muted" style="margin: 2px 0 0">{{ insights.protein.note }}</p>
+          </template>
+        </section>
       </div>
-      <div v-for="g in grouped" :key="g.name" style="margin-top: 6px">
-        <h3>{{ g.name }}</h3>
-        <label v-for="h in g.items" :key="h._id" class="check">
-          <input type="checkbox" :checked="!!doneMap[h._id]" @change="(e) => toggleHabit(h, e.target.checked)" />
-          <span>
-            {{ h.name }}
-            <span class="note" v-if="h.note">· {{ h.note }}</span>
-          </span>
-        </label>
-      </div>
-      <router-link to="/settings" class="link">管理清单 →</router-link>
-    </section>
 
-    <section class="card" v-if="cur">
-      <h2>本阶段训练要点</h2>
-      <ul class="plain">
-        <li v-for="(l, i) in cur.template || []" :key="i">{{ l }}</li>
-      </ul>
-      <router-link to="/training" class="link">去训练打卡 →</router-link>
-    </section>
+      <div class="col">
+        <section class="card">
+          <div class="row">
+            <h2 style="margin: 0">今日打卡</h2>
+            <span class="muted">7天坚持率 {{ habitRate }}%</span>
+          </div>
+          <div v-for="g in grouped" :key="g.name" style="margin-top: 6px">
+            <h3>{{ g.name }}</h3>
+            <label v-for="h in g.items" :key="h._id" class="check">
+              <input type="checkbox" :checked="!!doneMap[h._id]" @change="(e) => toggleHabit(h, e.target.checked)" />
+              <span>
+                {{ h.name }}
+                <span class="note" v-if="h.note">· {{ h.note }}</span>
+              </span>
+            </label>
+          </div>
+          <router-link to="/settings" class="link">管理清单 →</router-link>
+        </section>
 
-    <!-- AI 教练入口 -->
-    <section class="card">
-      <div class="row">
-        <div>
-          <b>🤖 AI 教练解读</b>
-          <p class="muted" style="margin: 2px 0 0">基于近期体重与打卡数据,生成 AI 阶段报告</p>
-        </div>
-        <router-link to="/coach" class="link" style="margin-top: 0; white-space: nowrap">进入 →</router-link>
+        <section class="card" v-if="cur">
+          <h2>本阶段训练要点</h2>
+          <ul class="plain">
+            <li v-for="(l, i) in cur.template || []" :key="i">{{ l }}</li>
+          </ul>
+          <router-link to="/training" class="link">去训练打卡 →</router-link>
+        </section>
+
+        <!-- AI 教练入口 -->
+        <section class="card">
+          <div class="row">
+            <div>
+              <b>🤖 AI 教练解读</b>
+              <p class="muted" style="margin: 2px 0 0">基于近期体重与打卡数据,生成 AI 阶段报告</p>
+            </div>
+            <router-link to="/coach" class="link" style="margin-top: 0; white-space: nowrap">进入 →</router-link>
+          </div>
+        </section>
       </div>
-    </section>
+    </div>
   </div>
 </template>
 
@@ -213,6 +228,27 @@ async function loadSug() {
   } catch { /* 离线时忽略 */ }
 }
 
+// ---- 测量提醒(/api/reminders:体重每天 1 次、腰围每周 1 次,到期未测的项 due=true) ----
+const REMIND_ICONS = { weight: '⚖️', waist: '📏' }
+const reminders = ref([])
+const dueReminders = computed(() => reminders.value.filter((r) => r && r.due))
+
+function remindText(r) {
+  let t = `${REMIND_ICONS[r.code] || '📏'} 该测${r.name}了`
+  if (r.reason) t += ` · ${r.reason}`
+  if (r.rule) t += `（${r.rule}）`
+  return t
+}
+
+async function loadReminders() {
+  try {
+    const res = await api('/api/reminders')
+    reminders.value = res.ok ? ((await res.json()).items || []) : []
+  } catch {
+    reminders.value = [] // 离线/未解锁/服务端异常:静默,不显示横幅
+  }
+}
+
 // ---- 智能提示(/api/insights:减重速率预警 / 平台期 / 蛋白质目标) ----
 const insights = ref(null)
 const hasInsight = computed(() => {
@@ -250,13 +286,16 @@ let timer = null
 onMounted(() => {
   loadSug()
   loadInsights()
+  loadReminders()
   timer = setInterval(loadSug, 60000)
   window.addEventListener('wm-synced', loadInsights)
+  window.addEventListener('wm-synced', loadReminders)
   if (route.query.weight) w.value = route.query.weight
 })
 onUnmounted(() => {
   clearInterval(timer)
   window.removeEventListener('wm-synced', loadInsights)
+  window.removeEventListener('wm-synced', loadReminders)
 })
 </script>
 

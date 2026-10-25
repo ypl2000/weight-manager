@@ -256,3 +256,46 @@ ul.plain li { margin: 3px 0; font-size: 14px; }
   .page { padding-top: 24px; }
   body { font-size: 15px; }
 }
+
+/* ================= 电脑端宽屏优化(≥1024px) =================
+   手机端与 768-1023px 区间不受任何影响:以下规则全部在媒体查询内 */
+
+@media (min-width: 1024px) {
+  /* 1) 页面容器:加宽 + 内边距加大;底栏改悬浮胶囊后,底部预留相应减小 */
+  .page {
+    max-width: 1080px;
+    padding: 28px 32px 72px;
+  }
+
+  /* 2) 底栏:固定通栏 → 悬浮居中胶囊(仍保持 5 个标签) */
+  .tabbar {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    bottom: 16px;
+    border-top: none;
+    border-radius: 999px;
+    padding: 6px 16px;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.18), 0 2px 8px rgba(15, 23, 42, 0.08);
+  }
+
+  /* 3) 双列容器(今日页 / AI 教练页):手机端是普通 div,宽屏变左右两列 */
+  .cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 14px;
+    align-items: start;
+  }
+
+  /* 5) 设置页:分区两列排布(dense 自动回填空位),「关于」分区保持通栏 */
+  .settings-page {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-auto-flow: dense;
+    gap: 0 14px;
+  }
+  .settings-page .page-head,
+  .settings-page details.sec:last-of-type {
+    grid-column: 1 / -1;
+  }
+}
