@@ -18,6 +18,7 @@
         <div class="grid2" style="margin-bottom: 8px">
           <label class="field">指标
             <select v-model="form.metric_code">
+              <option v-if="!metrics().length" value="" disabled>数据加载中…</option>
               <option v-for="m in metrics()" :key="m._id" :value="m.code">{{ m.name }}</option>
             </select>
           </label>
@@ -33,8 +34,9 @@
             <input v-model="form.note" type="text" placeholder="选填" />
           </label>
         </div>
+        <p v-if="!metrics().length" class="muted">数据加载中…</p>
         <p v-if="metricHint" class="muted">{{ metricHint }}</p>
-        <button @click="save" :disabled="!form.value" style="width: 100%">保存记录</button>
+        <button @click="save" :disabled="!form.value || !metrics().length" style="width: 100%">保存记录</button>
       </section>
 
       <section class="card">

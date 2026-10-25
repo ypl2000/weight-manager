@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<HealthData locale="zh_CN">
+  <ExportDate value="2026-10-25 08:00:00 +0800"/>
+  <Record type="HKQuantityTypeIdentifierBodyMass" sourceName="体重秤" unit="kg" creationDate="2026-10-20 07:30:10 +0800" startDate="2026-10-20 07:30:00 +0800" endDate="2026-10-20 07:30:00 +0800" value="77.7"/>
+  <Record type="HKQuantityTypeIdentifierBodyFatPercentage" sourceName="体重秤" unit="%" creationDate="2026-10-20 07:30:10 +0800" startDate="2026-10-20 07:30:00 +0800" endDate="2026-10-20 07:30:00 +0800" value="0.213"/>
+  <Record type="HKQuantityTypeIdentifierWaistCircumference" sourceName="手动录入" unit="cm" creationDate="2026-10-21 08:12:10 +0800" startDate="2026-10-21 08:12:00 +0800" endDate="2026-10-21 08:12:00 +0800" value="88.5"/>
+  <Record type="HKQuantityTypeIdentifierStepCount" sourceName="iPhone" unit="count" creationDate="2026-10-21 09:00:00 +0800" startDate="2026-10-21 09:00:00 +0800" endDate="2026-10-21 09:00:00 +0800" value="4321"/>
+</HealthData>

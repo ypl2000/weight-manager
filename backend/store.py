@@ -4,13 +4,15 @@
   docs(table_name, id, data JSON, updated_at ISO, deleted, seq 服务端递增号)
 """
 import json
+import os
 import sqlite3
 import threading
 import datetime as dt
 from pathlib import Path
 
 BASE = Path(__file__).resolve().parent
-DATA_DIR = BASE / "data"
+# WEIGHT_DATA_DIR 仅用于测试隔离(如 8001 临时实例),正式服务不设置该变量,行为不变
+DATA_DIR = Path(os.environ.get("WEIGHT_DATA_DIR") or (BASE / "data"))
 BACKUP_DIR = DATA_DIR / "backups"
 DB_PATH = DATA_DIR / "app.db"
 _lock = threading.Lock()
@@ -48,8 +50,8 @@ def _conn():
 
 
 def init_db():
-    DATA_DIR.mkdir(exist_ok=True)
-    BACKUP_DIR.mkdir(exist_ok=True)
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    BACKUP_DIR.mkdir(parents=True, exist_ok=True)
     with _lock, _conn() as c:
         c.executescript(SCHEMA)
 

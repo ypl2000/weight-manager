@@ -16,6 +16,7 @@ import store
 import seed
 import engine
 import recognize
+import importers
 
 app = FastAPI(title="体重管理")
 DIST = Path(__file__).resolve().parent.parent / "frontend" / "dist"
@@ -114,8 +115,8 @@ def history_restore(seq: int):
     row = store.get_history_row(seq)
     if not row:
         raise HTTPException(404, "历史不存在")
-    if row["data"] is None:
-        raise HTTPException(400, "该历史无内容可恢复")
+    if not row["data"]:  # None 或空 dict:软删除产生的空版本,恢复会出现可见空记录
+        raise HTTPException(400, "该历史为删除操作产生的空版本,不可恢复")
     store.upsert_doc(row["table"], row["doc_id"], row["data"], store.now_iso(),
                      False, "restore", force=True)
     return {"ok": True}
@@ -207,6 +208,78 @@ async def recognize_api(image: UploadFile = File(...)):
         return await recognize.recognize_image(raw, mime, cfg, metrics)
     except Exception as e:
         raise HTTPException(400, str(e))
+
+
+# ---------- 数据导入(迭代1) ----------
+
+@app.post("/api/import/preview")
+async def import_preview(file: UploadFile = File(...)):
+    raw = await file.read()
+    if not raw:
+        raise HTTPException(400, "文件为空")
+    if len(raw) > 200 * 1024 * 1024:
+        raise HTTPException(400, "文件过大(上限200MB)")
+    try:
+        return importers.preview(raw, file.filename or "")
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    except Exception as e:  # 未知解析异常也不该 500
+        raise HTTPException(400, f"解析失败:{e}")
+
+
+@app.post("/api/import/commit")
+async def import_commit(request: Request):
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(400, "请求体必须是 JSON")
+    rows = body.get("rows")
+    if not isinstance(rows, list):
+        raise HTTPException(400, "rows 必须是数组")
+    if len(rows) > importers.MAX_ROWS:
+        raise HTTPException(400, f"行数超过上限{importers.MAX_ROWS}")
+    note = str(body.get("note") or "批量导入")
+    units = {}
+    for m in store.get_all("metrics"):
+        units[m["data"].get("code")] = m["data"].get("unit", "")
+    imported = skipped = 0
+    for row in rows:
+        if not isinstance(row, dict):
+            skipped += 1
+            continue
+        try:
+            moment = importers.parse_datetime(row.get("at"))
+        except ValueError:
+            skipped += 1
+            continue
+        epoch = int(moment.timestamp())
+        metrics = row.get("metrics") or {}
+        if not isinstance(metrics, dict) or not metrics:
+            skipped += 1
+            continue
+        for code, value in metrics.items():
+            try:
+                val = round(float(value), 2)
+            except (TypeError, ValueError):
+                skipped += 1
+                continue
+            lo, hi = importers.RANGES.get(code, (float("-inf"), float("inf")))
+            if not lo <= val <= hi:
+                skipped += 1
+                continue
+            doc_id = f"imp_{code}_{epoch}"  # 确定性 id:同一秒同一指标只留一条
+            if store.get_doc("records", doc_id):
+                # 已存在即跳过(首写优先)。不能按"值不同就覆盖":同一秒两个来源数值不同时
+                # 会来回改写,重复 commit 的 imported 永远不归 0,且每轮都产生 history/同步增量。
+                skipped += 1
+                continue
+            store.upsert_doc("records", doc_id,
+                             {"metric_code": code, "value": val,
+                              "unit": units.get(code, ""), "at": row.get("at"),
+                              "note": note, "source": "import"},
+                             store.now_iso(), False, "import")
+            imported += 1
+    return {"imported": imported, "skipped": skipped}
 
 
 # ---------- 前端静态页面 ----------

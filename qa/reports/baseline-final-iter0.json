@@ -1,0 +1,699 @@
+{
+ "version": 1,
+ "docs": [
+  {
+   "table": "metrics",
+   "id": "m_weight",
+   "data": {
+    "code": "weight",
+    "name": "体重",
+    "unit": "kg",
+    "sort": 1,
+    "active": true,
+    "daily": true,
+    "thresholds": {}
+   },
+   "updated_at": "2026-10-25T13:00:17.852Z",
+   "deleted": false
+  },
+  {
+   "table": "metrics",
+   "id": "m_waist",
+   "data": {
+    "code": "waist",
+    "name": "腰围",
+    "unit": "cm",
+    "sort": 2,
+    "active": true,
+    "thresholds": {
+     "all": 85,
+     "male": 90
+    },
+    "note": "女≥85 / 男≥90 提示内脏脂肪超标"
+   },
+   "updated_at": "2026-10-25T13:00:17.852Z",
+   "deleted": false
+  },
+  {
+   "table": "metrics",
+   "id": "m_hip",
+   "data": {
+    "code": "hip",
+    "name": "臀围",
+    "unit": "cm",
+    "sort": 3,
+    "active": true,
+    "thresholds": {}
+   },
+   "updated_at": "2026-10-25T13:00:17.852Z",
+   "deleted": false
+  },
+  {
+   "table": "metrics",
+   "id": "m_whr",
+   "data": {
+    "code": "whr",
+    "name": "腰臀比",
+    "unit": "",
+    "sort": 4,
+    "active": true,
+    "thresholds": {
+     "all": 0.85,
+     "male": 0.9
+    },
+    "note": "女>0.85 / 男≥0.9;记录腰围+臀围后可自动计算"
+   },
+   "updated_at": "2026-10-25T13:00:17.852Z",
+   "deleted": false
+  },
+  {
+   "table": "metrics",
+   "id": "m_bodyfat",
+   "data": {
+    "code": "bodyfat",
+    "name": "体脂率",
+    "unit": "%",
+    "sort": 5,
+    "active": true,
+    "thresholds": {}
+   },
+   "updated_at": "2026-10-25T13:00:17.852Z",
+   "deleted": false
+  },
+  {
+   "table": "metrics",
+   "id": "m_ppg",
+   "data": {
+    "code": "ppg",
+    "name": "餐后血糖",
+    "unit": "mmol/L",
+    "sort": 6,
+    "active": true,
+    "thresholds": {},
+    "note": "餐后2小时"
+   },
+   "updated_at": "2026-10-25T13:00:17.852Z",
+   "deleted": false
+  },
+  {
+   "table": "stages",
+   "id": "s1",
+   "data": {
+    "name": "阶段① 降糖·稳食欲·降腰围",
+    "order": 1,
+    "color": "#f59e0b",
+    "active": true,
+    "summary": "四肢细肚子大、饭后犯困、嘴馋、虚弱;或大基数/内脂高。优先:降糖 + 稳食欲 + 降腰围。",
+    "standards": [
+     "腰围超标(女≥85cm / 男≥90cm)或腰臀比超标(女>0.85 / 男≥0.9)",
+     "大基数,或暂无规律运动基础"
+    ],
+    "targets": {
+     "cardio_per_week": 3,
+     "strength_per_week": 2
+    },
+    "template": [
+     "有氧:每周3-4次,每次30-40分钟,强度=能说话不能唱歌",
+     "项目选不枯燥+喜欢的:快走 / 骑行 / 游泳等",
+     "精力差 → 从散步10/20/30分钟或5000-6000步开始",
+     "听反馈:累 → 休息 / 降强度",
+     "力量:每次15分钟,重点练动作·发力·呼吸模式,打基础",
+     "饮食:控糖 + 稳食欲,按每日清单执行"
+    ],
+    "rules": []
+   },
+   "updated_at": "2026-10-25T13:00:17.852Z",
+   "deleted": false
+  },
+  {
+   "table": "stages",
+   "id": "s2",
+   "data": {
+    "name": "阶段② 过渡期·引入力量",
+    "order": 2,
+    "color": "#3b82f6",
+    "active": true,
+    "summary": "腰围开始下降、精力改善后,有氧:力量 ≈ 1:1,逐步引入力量训练。",
+    "standards": [
+     "腰围呈下降趋势",
+     "精力 / 餐后血糖改善",
+     "已建立运动习惯(≥2次/周)"
+    ],
+    "targets": {
+     "cardio_per_week": 3,
+     "strength_per_week": 3
+    },
+    "template": [
+     "有氧:力量 ≈ 1:1",
+     "有氧 → 提升线粒体数量与质量 → 燃脂/产能(精力)",
+     "心率60-70%,快慢交替,20-40分钟",
+     "强度越大 → 糖供能比例↑ → 运动前后加优质碳水",
+     "力量:高位下拉 / 划船 / 俯卧撑 / 深蹲 / 硬拉 / 死虫式"
+    ],
+    "rules": [
+     {
+      "metric": "waist",
+      "op": "trend_down",
+      "agg": "trend_down",
+      "window_days": 14
+     },
+     {
+      "metric": "workouts",
+      "op": "freq_gte",
+      "value": 2,
+      "window_days": 14
+     }
+    ]
+   },
+   "updated_at": "2026-10-25T13:00:17.852Z",
+   "deleted": false
+  },
+  {
+   "table": "stages",
+   "id": "s3",
+   "data": {
+    "name": "阶段③ 增肌塑形·力量为主",
+    "order": 3,
+    "color": "#10b981",
+    "active": true,
+    "summary": "腰围达标、心肺与肌耐力建立后,力量训练为主,二分化/三分化,渐进超负荷。",
+    "standards": [
+     "腰围达标(女<85cm / 男<90cm)",
+     "心肺 / 肌耐力基础建立",
+     "运动与恢复状态良好"
+    ],
+    "targets": {
+     "cardio_per_week": 2,
+     "strength_per_week": 4
+    },
+    "template": [
+     "力量为主:二分化或三分化",
+     "框架考虑:时间投入 · 恢复能力 · 发展目标(上肢?臀腿?)",
+     "渐进超负荷:逐步加重量或次数",
+     "有氧保持每周2-3次,维持线粒体与心肺"
+    ],
+    "rules": [
+     {
+      "metric": "waist",
+      "op": "lte",
+      "agg": "latest",
+      "value": {
+       "all": 85,
+       "male": 90
+      },
+      "window_days": 14
+     },
+     {
+      "metric": "workouts",
+      "op": "freq_gte",
+      "value": 3,
+      "window_days": 14
+     }
+    ]
+   },
+   "updated_at": "2026-10-25T13:00:17.852Z",
+   "deleted": false
+  },
+  {
+   "table": "habits",
+   "id": "h_d1",
+   "data": {
+    "name": "三餐规律·不乱加餐",
+    "category": "diet",
+    "sort": 1,
+    "active": true,
+    "note": "→ 胰岛素敏感性"
+   },
+   "updated_at": "2026-10-25T13:00:17.852Z",
+   "deleted": false
+  },
+  {
+   "table": "habits",
+   "id": "h_d2",
+   "data": {
+    "name": "蔬菜量 ≥ 主食+肉",
+    "category": "diet",
+    "sort": 2,
+    "active": true,
+    "note": "→ 纤维·抗氧化"
+   },
+   "updated_at": "2026-10-25T13:00:17.852Z",
+   "deleted": false
+  },
+  {
+   "table": "habits",
+   "id": "h_d3",
+   "data": {
+    "name": "蛋白质以白肉为主(鸡鸭鱼虾)",
+    "category": "diet",
+    "sort": 3,
+    "active": true
+   },
+   "updated_at": "2026-10-25T13:00:17.852Z",
+   "deleted": false
+  },
+  {
+   "table": "habits",
+   "id": "h_d4",
+   "data": {
+    "name": "拒绝包装深加工食品",
+    "category": "diet",
+    "sort": 4,
+    "active": true
+   },
+   "updated_at": "2026-10-25T13:00:17.852Z",
+   "deleted": false
+  },
+  {
+   "table": "habits",
+   "id": "h_d5",
+   "data": {
+    "name": "控糖:无奶茶/含糖饮料",
+    "category": "diet",
+    "sort": 5,
+    "active": true,
+    "note": "隐藏人群:体重正常四肢细→奶茶/外卖/熬夜"
+   },
+   "updated_at": "2026-10-25T13:00:17.852Z",
+   "deleted": false
+  },
+  {
+   "table": "habits",
+   "id": "h_d6",
+   "data": {
+    "name": "Omega平衡:深海鱼或坚果",
+    "category": "diet",
+    "sort": 6,
+    "active": true,
+    "note": "→ 平衡Omega-6/3比例"
+   },
+   "updated_at": "2026-10-25T13:00:17.852Z",
+   "deleted": false
+  },
+  {
+   "table": "habits",
+   "id": "h_s1",
+   "data": {
+    "name": "睡满7-8小时",
+    "category": "sleep",
+    "sort": 1,
+    "active": true,
+    "note": "→ 皮质醇昼夜节律"
+   },
+   "updated_at": "2026-10-25T13:00:17.852Z",
+   "deleted": false
+  },
+  {
+   "table": "habits",
+   "id": "h_s2",
+   "data": {
+    "name": "4-7-8呼吸练习",
+    "category": "sleep",
+    "sort": 2,
+    "active": true,
+    "note": "→ 激活副交感神经"
+   },
+   "updated_at": "2026-10-25T13:00:17.852Z",
+   "deleted": false
+  },
+  {
+   "table": "habits",
+   "id": "h_s3",
+   "data": {
+    "name": "少刷手机(刷手机≠放松)",
+    "category": "sleep",
+    "sort": 3,
+    "active": true,
+    "note": "→ 减少信息输入,不要完美主义"
+   },
+   "updated_at": "2026-10-25T13:00:17.852Z",
+   "deleted": false
+  },
+  {
+   "table": "habits",
+   "id": "h_m1",
+   "data": {
+    "name": "完成今日计划运动",
+    "category": "motion",
+    "sort": 1,
+    "active": true
+   },
+   "updated_at": "2026-10-25T13:00:17.852Z",
+   "deleted": false
+  },
+  {
+   "table": "exercises",
+   "id": "e_c1",
+   "data": {
+    "name": "快走",
+    "type": "cardio",
+    "active": true
+   },
+   "updated_at": "2026-10-25T13:00:17.852Z",
+   "deleted": false
+  },
+  {
+   "table": "exercises",
+   "id": "e_c2",
+   "data": {
+    "name": "骑行",
+    "type": "cardio",
+    "active": true
+   },
+   "updated_at": "2026-10-25T13:00:17.852Z",
+   "deleted": false
+  },
+  {
+   "table": "exercises",
+   "id": "e_c3",
+   "data": {
+    "name": "游泳",
+    "type": "cardio",
+    "active": true
+   },
+   "updated_at": "2026-10-25T13:00:17.852Z",
+   "deleted": false
+  },
+  {
+   "table": "exercises",
+   "id": "e_c4",
+   "data": {
+    "name": "散步",
+    "type": "cardio",
+    "active": true,
+    "note": "精力差时从10/20/30分钟开始"
+   },
+   "updated_at": "2026-10-25T13:00:17.852Z",
+   "deleted": false
+  },
+  {
+   "table": "exercises",
+   "id": "e_c5",
+   "data": {
+    "name": "慢跑",
+    "type": "cardio",
+    "active": true
+   },
+   "updated_at": "2026-10-25T13:00:17.852Z",
+   "deleted": false
+  },
+  {
+   "table": "exercises",
+   "id": "e_s1",
+   "data": {
+    "name": "高位下拉",
+    "type": "strength",
+    "active": true
+   },
+   "updated_at": "2026-10-25T13:00:17.852Z",
+   "deleted": false
+  },
+  {
+   "table": "exercises",
+   "id": "e_s2",
+   "data": {
+    "name": "划船",
+    "type": "strength",
+    "active": true
+   },
+   "updated_at": "2026-10-25T13:00:17.852Z",
+   "deleted": false
+  },
+  {
+   "table": "exercises",
+   "id": "e_s3",
+   "data": {
+    "name": "俯卧撑",
+    "type": "strength",
+    "active": true
+   },
+   "updated_at": "2026-10-25T13:00:17.852Z",
+   "deleted": false
+  },
+  {
+   "table": "exercises",
+   "id": "e_s4",
+   "data": {
+    "name": "深蹲",
+    "type": "strength",
+    "active": true
+   },
+   "updated_at": "2026-10-25T13:00:17.852Z",
+   "deleted": false
+  },
+  {
+   "table": "exercises",
+   "id": "e_s5",
+   "data": {
+    "name": "硬拉",
+    "type": "strength",
+    "active": true
+   },
+   "updated_at": "2026-10-25T13:00:17.852Z",
+   "deleted": false
+  },
+  {
+   "table": "exercises",
+   "id": "e_s6",
+   "data": {
+    "name": "死虫式",
+    "type": "strength",
+    "active": true,
+    "note": "打基础:动作·发力·呼吸模式"
+   },
+   "updated_at": "2026-10-25T13:00:17.852Z",
+   "deleted": false
+  },
+  {
+   "table": "profile",
+   "id": "me",
+   "data": {
+    "gender": "",
+    "height_cm": null,
+    "birthday": "",
+    "current_stage_id": "s1",
+    "target_weight": null,
+    "target_waist": null
+   },
+   "updated_at": "2026-10-25T13:00:17.852Z",
+   "deleted": false
+  },
+  {
+   "table": "records",
+   "id": "5dd88994-fbcb-4be2-b8b8-f3b3fda0c3d7",
+   "data": {},
+   "updated_at": "2026-10-25T13:11:50.693Z",
+   "deleted": true
+  },
+  {
+   "table": "habit_logs",
+   "id": "h_s1_2026-10-25",
+   "data": {
+    "date": "2026-10-25",
+    "habit_id": "h_s1",
+    "done": 1
+   },
+   "updated_at": "2026-10-25T13:04:50.690Z",
+   "deleted": false
+  },
+  {
+   "table": "habit_logs",
+   "id": "h_d1_2026-10-25",
+   "data": {
+    "date": "2026-10-25",
+    "habit_id": "h_d1",
+    "done": 1
+   },
+   "updated_at": "2026-10-25T13:04:50.183Z",
+   "deleted": false
+  },
+  {
+   "table": "records",
+   "id": "1d32e2f1-75d2-4b85-8089-afd5a4533dd3",
+   "data": {},
+   "updated_at": "2026-10-25T13:15:33.322Z",
+   "deleted": true
+  },
+  {
+   "table": "records",
+   "id": "da118318-eeae-4999-8b5b-adedaad216b6",
+   "data": {},
+   "updated_at": "2026-10-25T13:15:10.693Z",
+   "deleted": true
+  },
+  {
+   "table": "records",
+   "id": "be8f7209-8830-469c-9d9e-d58c66aa5fbf",
+   "data": {
+    "metric_code": "waist",
+    "value": 96,
+    "unit": "cm",
+    "at": "2026-10-25T13:15:00.000Z",
+    "note": "",
+    "source": "manual"
+   },
+   "updated_at": "2026-10-25T13:15:13.695Z",
+   "deleted": false
+  },
+  {
+   "table": "probe",
+   "id": "x",
+   "data": {},
+   "updated_at": "2026-10-25T15:19:58.215Z",
+   "deleted": true
+  },
+  {
+   "table": "workouts",
+   "id": "1a22c6b8-a86c-4cb8-b754-e127828596c4",
+   "data": {
+    "date": "2026-10-25",
+    "type": "cardio",
+    "items": [
+     {
+      "name": "快走",
+      "minutes": 35,
+      "hr": null
+     }
+    ],
+    "feel": "ok",
+    "duration_min": 35,
+    "note": ""
+   },
+   "updated_at": "2026-10-25T13:23:49.690Z",
+   "deleted": false
+  },
+  {
+   "table": "records",
+   "id": "seed_w0",
+   "data": {
+    "metric_code": "weight",
+    "value": 89.4,
+    "unit": "kg",
+    "at": "2026-10-12T01:00:00.129Z",
+    "note": "",
+    "source": "manual"
+   },
+   "updated_at": "2026-10-12T01:00:00.129Z",
+   "deleted": false
+  },
+  {
+   "table": "records",
+   "id": "seed_w1",
+   "data": {
+    "metric_code": "weight",
+    "value": 89.1,
+    "unit": "kg",
+    "at": "2026-10-15T01:00:00.129Z",
+    "note": "",
+    "source": "manual"
+   },
+   "updated_at": "2026-10-15T01:00:00.129Z",
+   "deleted": false
+  },
+  {
+   "table": "records",
+   "id": "seed_w2",
+   "data": {
+    "metric_code": "weight",
+    "value": 88.9,
+    "unit": "kg",
+    "at": "2026-10-18T01:00:00.129Z",
+    "note": "",
+    "source": "manual"
+   },
+   "updated_at": "2026-10-18T01:00:00.129Z",
+   "deleted": false
+  },
+  {
+   "table": "records",
+   "id": "seed_w3",
+   "data": {
+    "metric_code": "weight",
+    "value": 88.7,
+    "unit": "kg",
+    "at": "2026-10-21T01:00:00.129Z",
+    "note": "",
+    "source": "manual"
+   },
+   "updated_at": "2026-10-21T01:00:00.129Z",
+   "deleted": false
+  },
+  {
+   "table": "records",
+   "id": "seed_w4",
+   "data": {
+    "metric_code": "weight",
+    "value": 88.5,
+    "unit": "kg",
+    "at": "2026-10-24T01:00:00.129Z",
+    "note": "",
+    "source": "manual"
+   },
+   "updated_at": "2026-10-24T01:00:00.129Z",
+   "deleted": false
+  },
+  {
+   "table": "records",
+   "id": "seed_bf0",
+   "data": {
+    "metric_code": "bodyfat",
+    "value": 25.8,
+    "unit": "%",
+    "at": "2026-10-19T01:00:00.129Z",
+    "note": "",
+    "source": "manual"
+   },
+   "updated_at": "2026-10-19T01:00:00.129Z",
+   "deleted": false
+  },
+  {
+   "table": "records",
+   "id": "seed_bf1",
+   "data": {
+    "metric_code": "bodyfat",
+    "value": 25.1,
+    "unit": "%",
+    "at": "2026-10-24T01:00:00.129Z",
+    "note": "",
+    "source": "manual"
+   },
+   "updated_at": "2026-10-25T13:31:30.291Z",
+   "deleted": false
+  },
+  {
+   "table": "records",
+   "id": "f55e1170-eb81-4f2f-ba93-4e13b3795beb",
+   "data": {},
+   "updated_at": "2026-10-25T14:41:55.949Z",
+   "deleted": true
+  },
+  {
+   "table": "records",
+   "id": "3870f5b1-db8e-4327-a3f7-5e0ca82968b1",
+   "data": {},
+   "updated_at": "2026-10-25T14:46:57.846Z",
+   "deleted": true
+  },
+  {
+   "table": "habit_logs",
+   "id": "h_d2_2026-10-25",
+   "data": {},
+   "updated_at": "2026-10-25T14:44:36.327Z",
+   "deleted": true
+  },
+  {
+   "table": "workouts",
+   "id": "57a8a1f7-1112-4d03-b950-c9faa98d7664",
+   "data": {},
+   "updated_at": "2026-10-25T14:44:40.937Z",
+   "deleted": true
+  },
+  {
+   "table": "exercises",
+   "id": "58fe3997-06fb-4adb-8d18-d5124dd58bf5",
+   "data": {},
+   "updated_at": "2026-10-25T14:44:42.798Z",
+   "deleted": true
+  }
+ ]
+}

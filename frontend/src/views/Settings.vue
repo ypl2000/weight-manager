@@ -122,6 +122,74 @@
       </div>
     </details>
 
+    <!-- 批量导入历史数据 -->
+    <details class="sec">
+      <summary>批量导入历史数据</summary>
+      <div class="body">
+        <p class="muted">
+          支持苹果健康 export.zip / 华为运动健康数据副本 / 通用 CSV(体重、体脂率、腰围、臀围、内脏脂肪等列)。
+          重复导入自动去重,可放心多次导入。导入需要联网。
+        </p>
+        <p v-if="!S.online" class="banner warn" style="margin:8px 0">当前离线:导入需要联网,请联网后再试。</p>
+        <input
+          ref="impInput"
+          type="file"
+          accept=".zip,.csv,.txt,.json"
+          :disabled="imp.busy || !S.online"
+          @change="onImportPick"
+        />
+        <p v-if="imp.busy" class="muted" style="margin:8px 0 0">{{ imp.stage }}</p>
+        <p v-if="imp.error" class="banner warn" style="margin:8px 0 0">{{ imp.error }}</p>
+
+        <div v-if="imp.preview" class="cand" style="margin-top:10px">
+          <div class="head">
+            <span>
+              <span class="chip">{{ impFormatName(imp.preview.format) }}</span>
+              共 {{ imp.preview.total }} 行<template v-if="imp.preview.skipped"> · 解析跳过 {{ imp.preview.skipped }} 行</template>
+            </span>
+          </div>
+          <div v-if="impMap.length" style="margin-top:6px">
+            <span class="muted" style="font-size:12px">列映射:</span>
+            <span class="pill" v-for="[col, code] in impMap" :key="col">{{ col }} → {{ impMetricName(code) }}</span>
+          </div>
+          <div v-if="impRows20.length" style="overflow-x:auto;margin-top:6px">
+            <table class="list">
+              <thead><tr><th>时间</th><th>体重</th><th>体脂率</th><th>腰围</th><th>臀围</th><th>内脏脂肪</th></tr></thead>
+              <tbody>
+                <template v-for="(r, i) in impRows20" :key="i">
+                  <tr>
+                    <td class="muted">{{ fmtLocal(r.at) }}</td>
+                    <td>{{ impVal(r, 'weight') }}</td>
+                    <td>{{ impVal(r, 'bodyfat') }}</td>
+                    <td>{{ impVal(r, 'waist') }}</td>
+                    <td>{{ impVal(r, 'hip') }}</td>
+                    <td>{{ impVal(r, 'visceral') }}</td>
+                  </tr>
+                  <tr v-if="r.warnings && r.warnings.length">
+                    <td colspan="6" style="color:#b45309;font-size:12px;padding-top:0">{{ r.warnings.join(';') }}</td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+          <p v-else class="muted" style="margin:8px 0 0">文件里没有可导入的行。</p>
+          <p v-if="imp.preview.total > impRows20.length" class="muted" style="font-size:12px">
+            仅预览前 {{ impRows20.length }} 行,确认后导入全部 {{ imp.preview.total }} 行。
+          </p>
+          <div class="row" style="margin-top:10px">
+            <button
+              @click="commitImport"
+              :disabled="!S.online || imp.committing || !imp.preview.total"
+              style="flex:1"
+            >
+              {{ imp.committing ? '导入中…' : '确认导入全部 ' + imp.preview.total + ' 行' }}
+            </button>
+            <button class="ghost" :disabled="imp.committing" @click="clearImport">取消</button>
+          </div>
+        </div>
+      </div>
+    </details>
+
     <!-- 数据安全 -->
     <details class="sec">
       <summary>数据安全:访问码 · 历史回滚 · 快照</summary>
@@ -141,7 +209,10 @@
               <td class="muted">{{ fmtLocal(h.created_at) }}</td>
               <td>{{ tableName(h.table) }} · {{ h.action === 'delete' ? '删除' : '修改' }}
                 <span class="muted">({{ h.device }})</span></td>
-              <td><button class="small ghost" @click="restore(h)">恢复此版本</button></td>
+              <td>
+                <span v-if="h.action === 'delete'" class="muted" style="font-size:12px">删除操作,不可恢复</span>
+                <button v-else class="small ghost" @click="restore(h)">恢复此版本</button>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -180,7 +251,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import {
   S, profile, allMetrics, rows, fmtLocal, refreshAll, toast,
 } from '../store'
@@ -356,6 +427,99 @@ async function importJson(e) {
     await kvSet('cursor', 0)
     await refreshAll()
     syncNow()
+  }
+}
+
+// ---- 批量导入历史数据 ----
+const IMP_FORMATS = { apple_health: '苹果健康', huawei_json: '华为运动健康', csv: 'CSV' }
+// 预览表列 → 后端 metrics 里的候选键名(苹果/华为/CSV 来源命名不一,取值做兼容)
+const IMP_COLS = [
+  { code: 'weight', keys: ['weight', '体重'] },
+  { code: 'bodyfat', keys: ['bodyfat', 'body_fat', 'bodyFat', 'fat', '体脂率'] },
+  { code: 'waist', keys: ['waist', '腰围'] },
+  { code: 'hip', keys: ['hip', '臀围'] },
+  { code: 'visceral', keys: ['visceral', 'visceral_fat', 'visceralFat', '内脏脂肪', '内脂'] },
+]
+const impInput = ref(null)
+const imp = ref({ busy: false, stage: '', error: '', preview: null, committing: false })
+const impMap = computed(() => Object.entries((imp.value.preview && imp.value.preview.mapped_columns) || {}))
+const impRows20 = computed(() => ((imp.value.preview && imp.value.preview.rows) || []).slice(0, 20))
+
+function impFormatName(f) {
+  return IMP_FORMATS[f] || f || '未知格式'
+}
+function impMetricName(code) {
+  const m = allMetrics().find((x) => x.code === code)
+  return m ? m.name : code
+}
+function impVal(r, code) {
+  const col = IMP_COLS.find((c) => c.code === code)
+  const ms = r.metrics || {}
+  if (col) {
+    for (const k of col.keys) {
+      if (ms[k] != null && ms[k] !== '') return ms[k]
+    }
+  }
+  return '—'
+}
+function resetImpInput() {
+  if (impInput.value) impInput.value.value = ''
+}
+function clearImport() {
+  imp.value.preview = null
+  imp.value.error = ''
+  resetImpInput()
+}
+
+async function onImportPick(e) {
+  const f = e.target.files && e.target.files[0]
+  if (!f) return
+  imp.value.preview = null
+  imp.value.error = ''
+  imp.value.busy = true
+  imp.value.stage = '正在解析文件,请稍候…'
+  try {
+    if (!S.online) throw new Error('导入需要联网')
+    const fd = new FormData()
+    fd.append('file', f, f.name || 'data.csv')
+    const res = await api('/api/import/preview', { method: 'POST', form: { body: fd } })
+    const data = await res.json().catch(() => null)
+    if (!res.ok) {
+      throw new Error((data && (data.detail || data.error)) || '解析失败(错误码 ' + res.status + ')')
+    }
+    if (data && data.error) throw new Error(data.error)
+    imp.value.preview = data
+  } catch (err) {
+    imp.value.error = String((err && err.message) || err)
+  } finally {
+    imp.value.busy = false
+    imp.value.stage = ''
+    resetImpInput()
+  }
+}
+
+async function commitImport() {
+  const pv = imp.value.preview
+  if (!pv || !pv.rows || !pv.rows.length) return
+  imp.value.committing = true
+  imp.value.error = ''
+  try {
+    if (!S.online) throw new Error('导入需要联网')
+    // rows 可能带 Vue 响应式代理,深拷成纯 JSON 再提交
+    const rowsBody = JSON.parse(JSON.stringify(pv.rows))
+    const res = await api('/api/import/commit', { method: 'POST', body: { rows: rowsBody } })
+    const data = await res.json().catch(() => null)
+    if (!res.ok) {
+      throw new Error((data && (data.detail || data.error)) || '提交失败(错误码 ' + res.status + ')')
+    }
+    toast(`导入 ${data.imported ?? 0} 条,跳过 ${data.skipped ?? 0} 条`)
+    imp.value.preview = null
+    await refreshAll()
+    syncNow()
+  } catch (err) {
+    imp.value.error = String((err && err.message) || err)
+  } finally {
+    imp.value.committing = false
   }
 }
 

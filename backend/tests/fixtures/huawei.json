@@ -1,0 +1,24 @@
+{
+  "data": [
+    {
+      "type": 10006,
+      "samplePoints": [
+        {
+          "key": "WEIGHT_BODYFAT_BROAD",
+          "startTime": 1768903800000,
+          "value": "{\"bodyWeight\": 77.9, \"bodyFatRate\": 22.5}"
+        },
+        {
+          "key": "WEIGHT_BODYFAT_BROAD",
+          "startTime": 1768990200000,
+          "value": "{\"bodyWeight\": 77.6, \"bodyFatRate\": 0.228}"
+        },
+        {
+          "key": "HEART_RATE",
+          "startTime": 1768990200000,
+          "value": "72"
+        }
+      ]
+    }
+  ]
+}
