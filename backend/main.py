@@ -18,6 +18,7 @@ import engine
 import recognize
 import importers
 import coach
+import insights
 
 app = FastAPI(title="体重管理")
 DIST = Path(__file__).resolve().parent.parent / "frontend" / "dist"
@@ -195,6 +196,13 @@ def stage_suggestion(window: int = 14):
     )
 
 
+# ---------- 智能洞察(迭代3,纯规则不调模型) ----------
+
+@app.get("/api/insights")
+def insights_api():
+    return insights.build()
+
+
 # ---------- 图片识别 ----------
 
 @app.post("/api/recognize")
@@ -319,6 +327,52 @@ async def coach_report(request: Request):
                 payload = {"error": ev["error"]}
             elif ev.get("done"):
                 payload = {"done": True, "report_id": ev["report_id"]}
+            else:
+                continue
+            yield _sse(payload)
+
+    return StreamingResponse(gen(), media_type="text/event-stream",
+                             headers={"Cache-Control": "no-cache",
+                                      "X-Accel-Buffering": "no"})
+
+
+@app.post("/api/coach/ask")
+async def coach_ask(request: Request):
+    def _sse(payload):
+        return "data: " + json.dumps(payload, ensure_ascii=False) + "\n\n"
+
+    # 校验前置(D3 教训):响应开始后不能再读 body;校验失败只发一条 error 事件,零模型调用。
+    try:
+        body = await request.json()
+    except Exception:  # 空 body / 坏 JSON
+        body = None
+    error = question = None
+    if not isinstance(body, dict):
+        error = "请求体必须是JSON对象"
+    else:
+        raw = body.get("question")
+        if not isinstance(raw, str):
+            error = "question 必须是字符串"
+        else:
+            q = raw.strip()
+            if not q:
+                error = "question 不能为空"
+            elif len(q) > 500:
+                error = "question 长度不能超过500字"
+            else:
+                question = q
+
+    async def gen():
+        if error:
+            yield _sse({"error": error})
+            return
+        async for ev in coach.stream_ask(question):
+            if "delta" in ev:
+                payload = {"delta": ev["delta"]}
+            elif "error" in ev:
+                payload = {"error": ev["error"]}
+            elif ev.get("done"):
+                payload = {"done": True, "qa_id": ev["qa_id"]}
             else:
                 continue
             yield _sse(payload)

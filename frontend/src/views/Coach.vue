@@ -8,7 +8,7 @@
       <router-link to="/" class="link" style="margin-top: 0; white-space: nowrap">← 返回今日</router-link>
     </header>
 
-    <p v-if="!S.online" class="banner warn">当前离线:AI 解读需要联网,请联网后再试。</p>
+    <p v-if="!S.online" class="banner warn">当前离线:AI 解读与提问都需要联网,请联网后再试。</p>
 
     <!-- 生成 -->
     <section class="card">
@@ -21,7 +21,7 @@
           @click="days = d"
         >近{{ d }}天</button>
       </div>
-      <button style="width: 100%" :disabled="generating || !S.online" @click="generate">
+      <button style="width: 100%" :disabled="generating || asking || !S.online" @click="generate">
         {{ generating ? '生成中…(含思考约需 30-60 秒)' : '生成 AI 解读' }}
       </button>
 
@@ -29,6 +29,47 @@
       <p v-else-if="partial" class="banner">生成中断:以下内容可能不完整。</p>
 
       <div v-if="content || generating" ref="reportBox" class="report">{{ content }}<span v-if="generating" class="caret">▍</span></div>
+    </section>
+
+    <!-- 问教练 -->
+    <section class="card">
+      <h2>问教练</h2>
+      <textarea
+        v-model="question"
+        :disabled="asking"
+        placeholder="问点什么，比如：间歇性断食值得做吗？"
+      ></textarea>
+      <p v-if="askErr" class="banner warn">{{ askErr }}</p>
+      <button style="width: 100%; margin-top: 8px" :disabled="asking || generating || !S.online" @click="askCoach">
+        {{ asking ? '思考中…约需 15-40 秒' : '提问' }}
+      </button>
+      <div v-if="answer || asking" ref="askBox" class="report">{{ answer }}<span v-if="asking" class="caret">▍</span></div>
+    </section>
+
+    <!-- 问答历史 -->
+    <section class="card">
+      <div class="row">
+        <h2 style="margin: 0">问答历史</h2>
+        <button class="small ghost" :disabled="qaLoading" @click="loadQa">
+          {{ qaLoading ? '刷新中…' : '刷新' }}
+        </button>
+      </div>
+      <p v-if="!qaList.length && !qaLoading" class="muted" style="margin-top: 10px">
+        还没有提问过。有减肥困惑,直接问教练。
+      </p>
+      <div v-for="qa in qaList" :key="qa.id" class="hist-item">
+        <div class="row hist-head" @click="toggleQa(qa.id)">
+          <span class="hist-meta">
+            <b class="q-text">Q: {{ qa.data.question }}</b>
+            <span class="muted">{{ fmtLocal(qa.data.at) }}<template v-if="qa.data.model"> · {{ qa.data.model }}</template></span>
+          </span>
+          <span class="hist-ops">
+            <span class="muted" style="font-size: 12px">{{ qaExpanded[qa.id] ? '收起 ▴' : '展开 ▾' }}</span>
+            <button class="small danger" @click.stop="delQa(qa)">删</button>
+          </span>
+        </div>
+        <div v-if="qaExpanded[qa.id]" class="report">{{ qa.data.answer }}</div>
+      </div>
     </section>
 
     <!-- 历史 -->
@@ -66,55 +107,46 @@ import { api, pin, queueWrite } from '../sync'
 
 const DAY_OPTIONS = [7, 30, 90]
 
-// ---- 生成状态 ----
-const days = ref(30)
-const generating = ref(false)
-const content = ref('')
-const errMsg = ref('')
-const partial = ref(false)
-const reportBox = ref(null)
-
+// ---- 教练 SSE 流式请求(生成解读 / 问教练 共用) ----
 // SSE 流最长静默时间:大模型"思考"阶段可能 60 秒以上才出首字节,
 // 超过该时长没收到任何字节就主动断开,避免按钮永远卡在"生成中"
 const IDLE_MS = 120000
 
-let abortCtrl = null
-let watchdog = null
-let timedOut = false
-let cancelled = false
+// 进行中的请求控制器,离开页面时统一中止
+const activeCtrls = new Set()
 
-function resetWatchdog() {
-  clearTimeout(watchdog)
-  watchdog = setTimeout(() => {
-    timedOut = true
-    if (abortCtrl) abortCtrl.abort()
-  }, IDLE_MS)
-}
-
-async function generate() {
-  if (generating.value || !S.online) return // 防重复提交
-  generating.value = true
-  content.value = ''
-  errMsg.value = ''
-  partial.value = false
-  timedOut = false
-  cancelled = false
-  abortCtrl = new AbortController()
+// POST 一个教练 SSE 接口,逐帧回调 handler({ delta, error })。
+// 返回 { status, ok, detail, gotDone, abort, timedOut }:
+// - status=401:未解锁,内部已派发 wm-locked,调用方直接返回
+// - ok=false 且非 abort:HTTP/网络错误,detail 为可直接展示的说明
+// - abort=true:请求被中止,timedOut 区分"等待超时"与"离开页面"
+async function coachStream(path, body, handler) {
+  const ctrl = new AbortController()
+  activeCtrls.add(ctrl)
+  let watchdog = null
+  let timedOut = false
+  const resetWatchdog = () => {
+    clearTimeout(watchdog)
+    watchdog = setTimeout(() => {
+      timedOut = true
+      ctrl.abort()
+    }, IDLE_MS)
+  }
   resetWatchdog()
   try {
     // 流式响应用原生 fetch + reader,手动带访问码头(与 sync.js api() 的 pin 头一致)
-    const res = await fetch('/api/coach/report', {
+    const res = await fetch(path, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         ...(pin() ? { 'X-Access-Code': pin() } : {}),
       },
-      body: JSON.stringify({ days: days.value }),
-      signal: abortCtrl.signal,
+      body: JSON.stringify(body),
+      signal: ctrl.signal,
     })
     if (res.status === 401) {
       window.dispatchEvent(new Event('wm-locked'))
-      return
+      return { status: 401, ok: false }
     }
     if (!res.ok || !res.body) {
       let detail = ''
@@ -122,7 +154,7 @@ async function generate() {
         const j = await res.json()
         detail = j.detail || j.error || ''
       } catch { /* 非 JSON 错误体 */ }
-      throw new Error(detail || `服务端返回错误(错误码 ${res.status})`)
+      return { status: res.status, ok: false, detail }
     }
 
     const reader = res.body.getReader()
@@ -136,8 +168,8 @@ async function generate() {
       if (!t.startsWith('data:')) return
       let evt
       try { evt = JSON.parse(t.slice(5).trim()) } catch { return } // 忽略无法解析的帧
-      if (typeof evt.delta === 'string' && evt.delta) content.value += evt.delta
-      else if (evt.error) errMsg.value = evt.error
+      if (typeof evt.delta === 'string' && evt.delta) handler.delta(evt.delta)
+      else if (evt.error) handler.error(evt.error)
       else if (evt.done) gotDone = true
     }
     // SSE 以空行(\n\n)分帧,最后一段可能不完整,留在缓冲区等下一个包;
@@ -159,28 +191,56 @@ async function generate() {
     buf += decoder.decode()
     for (const l of buf.split('\n')) onLine(l)
 
-    if (gotDone) loadHistory()
-    if (errMsg.value) {
-      // 收到 error 事件,横幅已显示原因
-    } else if (gotDone) {
-      toast('解读完成')
-    } else if (content.value) {
-      partial.value = true // 断流:有正文但没等到 done
-    } else {
-      errMsg.value = '连接中断,没有收到任何内容,请重试'
-    }
+    return { status: res.status, ok: true, gotDone }
   } catch (e) {
     if (e && e.name === 'AbortError') {
-      if (cancelled) { /* 离开页面触发的取消,静默 */ }
-      else if (timedOut) errMsg.value = '等待超时:服务端长时间没有响应,请稍后重试'
-      else errMsg.value = '已取消生成'
-    } else if (!errMsg.value) {
-      errMsg.value = '网络异常:' + String((e && e.message) || e)
+      return { status: 0, ok: false, abort: true, timedOut }
     }
+    return { status: 0, ok: false, detail: '网络异常:' + String((e && e.message) || e) }
   } finally {
     clearTimeout(watchdog)
-    watchdog = null
-    abortCtrl = null
+    activeCtrls.delete(ctrl)
+  }
+}
+
+// ---- 生成解读 ----
+const days = ref(30)
+const generating = ref(false)
+const content = ref('')
+const errMsg = ref('')
+const partial = ref(false)
+const reportBox = ref(null)
+
+async function generate() {
+  if (generating.value || asking.value || !S.online) return // 防重复提交
+  generating.value = true
+  content.value = ''
+  errMsg.value = ''
+  partial.value = false
+  try {
+    const r = await coachStream('/api/coach/report', { days: days.value }, {
+      delta: (t) => { content.value += t },
+      error: (msg) => { errMsg.value = msg },
+    })
+    if (r.status === 401) return // 已弹解锁
+    if (r.abort) {
+      if (r.timedOut) errMsg.value = '等待超时:服务端长时间没有响应,请稍后重试'
+      // 离开页面触发的取消:静默
+    } else if (!r.ok) {
+      errMsg.value = r.detail || `服务端返回错误(错误码 ${r.status})`
+    } else {
+      if (r.gotDone) loadHistory()
+      if (errMsg.value) {
+        // 收到 error 事件,横幅已显示原因
+      } else if (r.gotDone) {
+        toast('解读完成')
+      } else if (content.value) {
+        partial.value = true // 断流:有正文但没等到 done
+      } else {
+        errMsg.value = '连接中断,没有收到任何内容,请重试'
+      }
+    }
+  } finally {
     generating.value = false
   }
 }
@@ -223,11 +283,91 @@ async function delReport(h) {
   toast('已删除')
 }
 
-onMounted(loadHistory)
+// ---- 问教练 ----
+const MAX_Q = 500
+const question = ref('')
+const asking = ref(false)
+const answer = ref('')
+const askErr = ref('')
+const askBox = ref(null)
+
+async function askCoach() {
+  const q = question.value.trim()
+  if (asking.value || generating.value || !S.online) return // 防重复提交/离线
+  if (!q) { askErr.value = '请先输入问题'; return } // 空输入前置拦截
+  if (q.length > MAX_Q) { askErr.value = `问题不能超过 ${MAX_Q} 字,请精简后再问`; return } // 超长前置拦截
+  asking.value = true
+  answer.value = ''
+  askErr.value = ''
+  try {
+    const r = await coachStream('/api/coach/ask', { question: q }, {
+      delta: (t) => { answer.value += t },
+      error: (msg) => { askErr.value = msg },
+    })
+    if (r.status === 401) return // 已弹解锁
+    if (r.abort) {
+      if (r.timedOut) askErr.value = '等待超时:服务端长时间没有响应,请稍后重试'
+      // 离开页面触发的取消:静默
+    } else if (!r.ok) {
+      askErr.value = r.detail || `服务端返回错误(错误码 ${r.status})`
+    } else if (r.gotDone) {
+      loadQa() // 服务端已把这条问答存档,刷新问答历史
+      toast('回答完成')
+    } else if (answer.value) {
+      askErr.value = '回答中断:以下内容可能不完整'
+    } else {
+      askErr.value = '连接中断,没有收到任何内容,请重试'
+    }
+  } finally {
+    asking.value = false
+  }
+}
+
+// 回答流式输出时让内容区跟随滚动到底部
+watch(answer, async () => {
+  if (!asking.value) return
+  await nextTick()
+  const box = askBox.value
+  if (box) box.scrollTop = box.scrollHeight
+})
+
+// ---- 问答历史 ----
+const qaList = ref([])
+const qaLoading = ref(false)
+const qaExpanded = ref({})
+
+async function loadQa() {
+  qaLoading.value = true
+  try {
+    const res = await api('/api/tables/coach_qa')
+    if (res.ok) {
+      const list = await res.json()
+      qaList.value = (Array.isArray(list) ? list : [])
+        .filter((d) => d && !d.deleted && d.data)
+        .sort((a, b) => ((a.data.at || '') < (b.data.at || '') ? 1 : -1))
+    }
+  } catch { /* 离线或未解锁时保留当前列表 */ }
+  finally { qaLoading.value = false }
+}
+
+function toggleQa(id) {
+  qaExpanded.value[id] = !qaExpanded.value[id]
+}
+
+async function delQa(item) {
+  if (!confirm('确定删除这条问答?')) return
+  await queueWrite('coach_qa', item.id, {}, { deleted: true }) // 软删除,进同步队列
+  qaList.value = qaList.value.filter((x) => x.id !== item.id)
+  toast('已删除')
+}
+
+onMounted(() => {
+  loadHistory()
+  loadQa()
+})
 onUnmounted(() => {
-  cancelled = true
-  if (abortCtrl) abortCtrl.abort()
-  clearTimeout(watchdog)
+  for (const c of activeCtrls) c.abort() // 离开页面中止进行中的流
+  activeCtrls.clear()
 })
 </script>
 
@@ -256,4 +396,5 @@ onUnmounted(() => {
 .hist-head { cursor: pointer; }
 .hist-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; min-width: 0; }
 .hist-ops { display: flex; align-items: center; gap: 8px; flex: none; }
+.q-text { min-width: 0; flex: 1 1 140px; word-break: break-word; }
 </style>

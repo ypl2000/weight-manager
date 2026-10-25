@@ -5,12 +5,16 @@
   数据不足的维度如实标注,不编造。
 - stream_report(days): async generator,逐段 yield {"delta": 文本} 事件;
   流结束后把完整报告写入 docs 表 "coach_reports"(id=uuid, device="coach")。
+- stream_ask(question): AI 问答,事件同上,结束后写入 docs 表 "coach_qa"
+  (id=uuid, data={at, question, answer, model}, device="coach"),done 带 qa_id。
   无 API Key 或调用失败时 yield {"error": 原因} 事件。
-- 系统提示词内嵌了用户已学习的减脂知识原则(提炼自 docs/知识汇总-整理版.md)。
+- 系统提示词 = 回答策略 + 知识库正文(读 docs/知识汇总-整理版.md,截到
+  "## 主要错别字修正对照"之前,模块级缓存;文件缺失时知识库为空并照常工作)。
 """
 import datetime as dt
 import json
 import uuid
+from pathlib import Path
 
 import httpx
 
@@ -20,15 +24,52 @@ import store
 DEFAULT_COACH_MODEL = "glm-5.3-flash"
 DEFAULT_BASE = "https://open.bigmodel.cn/api/paas/v4"
 
-# 教练必须遵守的知识原则(提炼自 docs/知识汇总-整理版.md)
-SYSTEM_PROMPT = """你是一位严谨的私人减脂教练,基于用户的真实健康数据输出分析报告。用户已系统学习以下知识原则,你的每一条结论都必须与之一致:
-1. 热量缺口是减脂效果最核心的底座,任何建议最终都要回到"如何维持合理的热量缺口";
-2. 减重速率超过1kg/周时必须警示:快速减重会不成比例地流失肌肉与骨密度,减肥是马拉松,不是越快越好;
-3. 蛋白质参考量:普通人群每天1.2-1.6g/kg体重,有力量训练习惯者1.6-2.2g/kg;
-4. 体重短期波动多为水分(吃咸/碳水/生理期/运动炎症储水),要看长期趋势和周均值,不评判单日涨跌;
-5. 平台期先分型:假平台=水分潴留,看腰围是否仍在下降;真平台=热量缺口消失(体重下降后代谢随之下降属正常生理现象;更常见是依从性不知不觉下滑,热量估算普遍被低估25%-50%,建议往高了估并复盘饮食记录"查账");
-6. 只做生活方式与数据分析指导,不提供医疗诊断、用药建议;指标明显异常时建议就医。
-输出格式:中文 markdown,固定四节:## 趋势解读、## 亮点、## 风险、## 下周建议。总长不超过600字,结论要给数字、说人话、不说空话;数据不足的维度如实说明"数据不足",禁止编造数值。"""
+# ---- 知识库加载(周报与问答共用) ----
+
+KB_PATH = Path(__file__).resolve().parent.parent / "docs" / "知识汇总-整理版.md"
+KB_CUT_MARK = "## 主要错别字修正对照"  # 其后的错别字对照表/待核对清单是编辑痕迹,不进知识库
+_kb_cache = None  # None=未加载; ""=文件缺失(空知识库)
+
+
+def knowledge_base():
+    """读知识库正文(截取开头到错别字对照之前);模块级缓存,缺失时返回空串。"""
+    global _kb_cache
+    if _kb_cache is None:
+        try:
+            text = KB_PATH.read_text(encoding="utf-8")
+            cut = text.find(KB_CUT_MARK)
+            _kb_cache = text[:cut].strip() if cut >= 0 else text.strip()
+        except Exception:
+            _kb_cache = ""
+    return _kb_cache
+
+
+# 回答策略:周报与问答共用的最高优先级约束
+STRATEGY_PROMPT = """回答策略(必须遵守):
+1. 下方"知识库"是用户已系统学习的内容,是你所有教练建议的最高依据;回答时优先依据知识库内容,并注明出处章节(如"依据知识库·平台期")。
+2. 用户的问题超出知识库范围时,可用通用知识回答,但必须在回答开头注明"(以下为知识库之外的补充)"。
+3. 与知识库冲突的流行说法(如"热量缺口是假的""生酮/断食有神奇优势"),一律以知识库为准,并明确指出。
+4. 只做生活方式与数据分析指导,不做医疗诊断、不推荐用药;指标明显异常时建议就医。"""
+
+_REPORT_RULES = ('输出格式:中文 markdown,固定四节:## 趋势解读、## 亮点、## 风险、## 下周建议。'
+                 '总长不超过600字,结论要给数字、说人话、不说空话;'
+                 '数据不足的维度如实说明"数据不足",禁止编造数值。')
+
+_ASK_RULES = ('请直接回答用户的上述问题:结论先行,给数字、说人话;若与用户数据相关,结合摘要给个性化建议;'
+              '回答总长不超过400字(软约束),中文 markdown。')
+
+
+def _system_prompt(extra_rules):
+    """系统提示词 = 角色 + 回答策略 + 知识库正文 + 场景化格式要求。"""
+    kb = knowledge_base()
+    if kb:
+        kb_block = ("=== 知识库(用户学习的内容,教练建议的最高依据) ===\n"
+                    + kb + "\n=== 知识库结束 ===")
+    else:
+        kb_block = ('=== 知识库:(本次为空。请用通用知识回答,'
+                    '并在回答开头注明"(以下为知识库之外的补充)") ===')
+    return ("你是一位严谨的私人减脂教练,基于用户的真实健康数据输出分析与解答。\n\n"
+            + STRATEGY_PROMPT + "\n\n" + kb_block + "\n\n" + extra_rules)
 
 
 def _parse(ts):
@@ -262,35 +303,31 @@ def _mask(text, key):
     return text
 
 
-async def stream_report(days):
-    """async generator:yield {"delta"} / {"error"} / {"done", "report_id"} 事件。"""
+def _ai_cfg():
+    """读取 AI 配置:(api_key, 模型, base_url)。模型/参数周报与问答保持一致。"""
     cfg = store.get_meta("ai") or {}
-    api_key = cfg.get("api_key") or ""
-    if not api_key:
-        yield {"error": "尚未配置AI Key:请到 设置→AI识别 填写后保存再试"}
-        return
+    return (cfg.get("api_key") or "",
+            cfg.get("coach_model") or DEFAULT_COACH_MODEL,
+            (cfg.get("base_url") or DEFAULT_BASE).rstrip("/"))
 
-    days = max(1, min(int(days), 365))
-    summary = build_summary(days)
-    prompt = (f"请基于以下真实统计数据,生成本次健康分析报告(统计窗口:最近{days}天)。\n\n"
-              + _summary_text(summary)
-              + "\n\n只输出报告正文(固定四节 markdown),不要复述数据清单,不要输出思考过程。")
-    model = cfg.get("coach_model") or DEFAULT_COACH_MODEL
-    base = (cfg.get("base_url") or DEFAULT_BASE).rstrip("/")
-    payload = {
+
+def _payload(model, system_prompt, user_prompt):
+    return {
         "model": model,
-        "messages": [{"role": "system", "content": SYSTEM_PROMPT},
-                     {"role": "user", "content": prompt}],
+        "messages": [{"role": "system", "content": system_prompt},
+                     {"role": "user", "content": user_prompt}],
         "stream": True,
         "temperature": 0.6,
         "max_tokens": 2048,
         "thinking": {"type": "enabled"},
         "reasoning_effort": "low",
     }
-    headers = {"Authorization": "Bearer " + api_key}
 
-    report_id = str(uuid.uuid4())
-    chunks = []
+
+async def _stream_chat(api_key, base, payload):
+    """调大模型流式接口:逐段 yield {"delta": 正文增量};失败 yield {"error"} 后结束。
+    只转发 delta.content,思考串(reasoning_content)一律忽略。"""
+    headers = {"Authorization": "Bearer " + api_key}
     try:
         timeout = httpx.Timeout(120.0, connect=10.0)
         async with httpx.AsyncClient(timeout=timeout) as client:
@@ -314,18 +351,66 @@ async def stream_report(days):
                     delta = (((obj.get("choices") or [{}])[0].get("delta") or {})
                              .get("content"))
                     if delta:
-                        chunks.append(delta)
                         yield {"delta": delta}
     except Exception as e:
         yield {"error": _mask(f"调用大模型失败:{e}", api_key)}
-        return
 
+
+async def _finish(chunks, table, doc_id, data, done_event, field="content"):
+    """拼接正文并落库(周报存 content 字段,问答存 answer 字段);返回 done 事件。
+    内容为空时返回 error 事件(不落库)。"""
     content = "".join(chunks)
     if not content.strip():
-        yield {"error": "模型未返回正文内容(只有思考串或空响应),请稍后重试"}
-        return
-    store.upsert_doc("coach_reports", report_id,
-                     {"at": store.now_iso(), "days": days,
-                      "content": content, "model": model},
+        return {"error": "模型未返回正文内容(只有思考串或空响应),请稍后重试"}
+    store.upsert_doc(table, doc_id, dict(data, **{field: content}),
                      store.now_iso(), False, "coach")
-    yield {"done": True, "report_id": report_id}
+    return done_event
+
+
+async def stream_report(days):
+    """async generator:yield {"delta"} / {"error"} / {"done", "report_id"} 事件。"""
+    api_key, model, base = _ai_cfg()
+    if not api_key:
+        yield {"error": "尚未配置AI Key:请到 设置→AI识别 填写后保存再试"}
+        return
+
+    days = max(1, min(int(days), 365))
+    summary = build_summary(days)
+    prompt = (f"请基于以下真实统计数据,生成本次健康分析报告(统计窗口:最近{days}天)。\n\n"
+              + _summary_text(summary)
+              + "\n\n只输出报告正文(固定四节 markdown),不要复述数据清单,不要输出思考过程。")
+    report_id = str(uuid.uuid4())
+    chunks = []
+    async for ev in _stream_chat(api_key, base, _payload(model, _system_prompt(_REPORT_RULES), prompt)):
+        if "error" in ev:
+            yield ev
+            return
+        chunks.append(ev["delta"])
+        yield ev
+    yield await _finish(chunks, "coach_reports", report_id,
+                        {"at": store.now_iso(), "days": days, "model": model},
+                        {"done": True, "report_id": report_id})
+
+
+async def stream_ask(question):
+    """AI 问答:yield {"delta"} / {"error"} / {"done", "qa_id"} 事件。
+    用户数据摘要(近30天)与周报同源(build_summary)。"""
+    api_key, model, base = _ai_cfg()
+    if not api_key:
+        yield {"error": "尚未配置AI Key:请到 设置→AI识别 填写后保存再试"}
+        return
+
+    summary = build_summary(30)
+    prompt = ("=== 用户数据摘要(最近30天,与周报同源) ===\n" + _summary_text(summary)
+              + "\n=== 摘要结束 ===\n\n用户问题:" + question)
+    qa_id = str(uuid.uuid4())
+    chunks = []
+    async for ev in _stream_chat(api_key, base, _payload(model, _system_prompt(_ASK_RULES), prompt)):
+        if "error" in ev:
+            yield ev
+            return
+        chunks.append(ev["delta"])
+        yield ev
+    yield await _finish(chunks, "coach_qa", qa_id,
+                        {"at": store.now_iso(), "question": question, "model": model},
+                        {"done": True, "qa_id": qa_id}, field="answer")

@@ -39,6 +39,32 @@
       </div>
     </section>
 
+    <!-- 智能提示 -->
+    <section class="card" v-if="hasInsight">
+      <h2>智能提示</h2>
+      <div v-if="insights.rate_alert" class="banner warn">
+        <span>⚠️ {{ insights.rate_alert.message }}</span>
+      </div>
+      <div
+        v-if="insights.plateau"
+        class="banner"
+        :class="insights.plateau.type === 'true_plateau' ? 'warn' : 'info'"
+      >
+        <div class="banner-body">
+          <div>{{ insights.plateau.message }}</div>
+          <div class="muted" style="font-size: 12px; margin-top: 2px">真假平台期判读依据见 AI 教练</div>
+        </div>
+      </div>
+      <template v-if="insights.protein">
+        <h3>今日蛋白质目标</h3>
+        <div class="protein-line">
+          <span><b class="protein-num">{{ insights.protein.target_g }}</b> g/天</span>
+          <span v-if="insights.protein.food_hint" class="pill">{{ insights.protein.food_hint }}</span>
+        </div>
+        <p v-if="insights.protein.note" class="muted" style="margin: 2px 0 0">{{ insights.protein.note }}</p>
+      </template>
+    </section>
+
     <section class="card">
       <div class="row">
         <h2 style="margin: 0">今日打卡</h2>
@@ -85,7 +111,7 @@ import {
   S, profile, metrics, stages, currentStage, latestRecord, bmi, whr,
   habits, rows, today, fmtLocal, toast,
 } from '../store'
-import { queueWrite, syncNow } from '../sync'
+import { api, queueWrite, syncNow } from '../sync'
 
 const route = useRoute()
 const w = ref('')
@@ -187,6 +213,22 @@ async function loadSug() {
   } catch { /* 离线时忽略 */ }
 }
 
+// ---- 智能提示(/api/insights:减重速率预警 / 平台期 / 蛋白质目标) ----
+const insights = ref(null)
+const hasInsight = computed(() => {
+  const i = insights.value
+  return !!(i && (i.rate_alert || i.plateau || i.protein))
+})
+
+async function loadInsights() {
+  try {
+    const res = await api('/api/insights')
+    insights.value = res.ok ? await res.json() : null
+  } catch {
+    insights.value = null // 离线/未解锁/服务端异常:静默,整卡不显示
+  }
+}
+
 async function applyStage(toId, mode) {
   const p = profile()
   await queueWrite('profile', 'me', { ...p, current_stage_id: toId })
@@ -207,8 +249,19 @@ function manualSync() {
 let timer = null
 onMounted(() => {
   loadSug()
+  loadInsights()
   timer = setInterval(loadSug, 60000)
+  window.addEventListener('wm-synced', loadInsights)
   if (route.query.weight) w.value = route.query.weight
 })
-onUnmounted(() => clearInterval(timer))
+onUnmounted(() => {
+  clearInterval(timer)
+  window.removeEventListener('wm-synced', loadInsights)
+})
 </script>
+
+<style scoped>
+.banner-body { min-width: 0; }
+.protein-line { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-top: 2px; }
+.protein-num { font-size: 26px; color: var(--teal); }
+</style>
