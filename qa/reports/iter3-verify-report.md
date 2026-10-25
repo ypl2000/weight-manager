@@ -108,3 +108,9 @@ SSE 200，**581 delta / 869 字 / 首帧 1.3s / 全程 13.5s**，done 带 report
 ## 截图清单（qa/reports/）
 - `iter3-insights-card.png` — 今日页"智能提示"卡（今日蛋白质目标 124 g/天 + 鸡胸肉 564g pill + 知识库注释）
 - `iter3-coach-ask.png` — 教练页"问教练"卡 + "问答历史"同框（整页，含基线问答展开态）
+
+## 复验记录（Markdown 渲染修复）
+
+- **fail 项**：视觉验收首轮 iter3-coach-ask.png 不通过——回答正文以原始 Markdown 符号（##、**、-）直接显示
+- **修复提交**：1c0578e（[前端] Coach.vue 新增 renderMd：先 HTML 转义防注入，再转换 ##/### 标题、**加粗**、行首 - 列表；流式区/问答历史/历史解读三处统一接入）
+- **复验结果**：pass——渲染后正文含 3 个标题元素、6 处加粗、3 个列表项，无裸露 ## / ** 符号；复验截图 iter3-coach-ask-fixed.png；视觉评审复验结论 pass
