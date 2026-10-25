@@ -1,0 +1,225 @@
+"""体重管理服务端:FastAPI + SQLite。
+
+同一进程提供:
+  - /api/*    同步、CRUD、历史回滚、快照、阶段判定、图片识别
+  - /*        前端 PWA 静态页面(frontend/dist)
+"""
+import csv
+import io
+import json
+from pathlib import Path
+
+from fastapi import FastAPI, Request, UploadFile, File, HTTPException
+from fastapi.responses import JSONResponse, FileResponse, Response
+
+import store
+import seed
+import engine
+import recognize
+
+app = FastAPI(title="体重管理")
+DIST = Path(__file__).resolve().parent.parent / "frontend" / "dist"
+
+
+@app.on_event("startup")
+def _startup():
+    store.init_db()
+    seed.seed_if_empty()
+    store.snapshot_if_needed()
+
+
+@app.middleware("http")
+async def _pin_guard(request, call_next):
+    p = request.url.path
+    if p.startswith("/api") and p != "/api/unlock":
+        pin = (store.get_meta("pin") or {}).get("code") or ""
+        if pin and request.headers.get("x-access-code") != pin:
+            return JSONResponse({"detail": "需要访问码"}, status_code=401)
+    return await call_next(request)
+
+
+# ---------- 访问码 ----------
+
+@app.post("/api/unlock")
+async def unlock(request: Request):
+    body = await request.json()
+    pin = (store.get_meta("pin") or {}).get("code") or ""
+    if pin and body.get("code") != pin:
+        raise HTTPException(403, "访问码不对")
+    return {"ok": True}
+
+
+@app.get("/api/meta/{key}")
+def meta_get(key: str):
+    if key == "pin":
+        return {"set": bool((store.get_meta("pin") or {}).get("code"))}
+    return store.get_meta(key)
+
+
+@app.put("/api/meta/{key}")
+async def meta_put(key: str, request: Request):
+    body = await request.json()
+    store.set_meta(key, body)
+    return {"ok": True}
+
+
+# ---------- 同步 ----------
+
+@app.post("/api/sync")
+async def sync(request: Request):
+    body = await request.json()
+    device = body.get("device") or "unknown"
+    cursor = int(body.get("cursor") or 0)
+    applied = 0
+    for ch in body.get("changes") or []:
+        store.upsert_doc(ch["table"], ch["id"], ch.get("data") or {},
+                         ch.get("updated_at") or store.now_iso(),
+                         bool(ch.get("deleted")), device)
+        applied += 1
+    docs, new_cursor = store.changes_since(cursor)
+    return {"applied": applied, "changes": docs, "cursor": new_cursor}
+
+
+# ---------- 通用 CRUD(电脑端直接操作) ----------
+
+@app.get("/api/tables/{name}")
+def table_all(name: str):
+    return store.get_all(name)
+
+
+@app.put("/api/tables/{name}/{doc_id}")
+async def table_put(name: str, doc_id: str, request: Request):
+    body = await request.json()
+    store.upsert_doc(name, doc_id, body.get("data") or {},
+                     body.get("updated_at") or store.now_iso(),
+                     bool(body.get("deleted")), "server")
+    return {"ok": True}
+
+
+@app.delete("/api/tables/{name}/{doc_id}")
+def table_delete(name: str, doc_id: str):
+    store.upsert_doc(name, doc_id, {}, store.now_iso(), True, "server")
+    return {"ok": True}
+
+
+# ---------- 历史与回滚 ----------
+
+@app.get("/api/history")
+def history(table: str = None, doc_id: str = None, limit: int = 100):
+    return store.list_history(table, doc_id, min(limit, 500))
+
+
+@app.post("/api/history/{seq}/restore")
+def history_restore(seq: int):
+    row = store.get_history_row(seq)
+    if not row:
+        raise HTTPException(404, "历史不存在")
+    if row["data"] is None:
+        raise HTTPException(400, "该历史无内容可恢复")
+    store.upsert_doc(row["table"], row["doc_id"], row["data"], store.now_iso(),
+                     False, "restore", force=True)
+    return {"ok": True}
+
+
+# ---------- 快照备份 / 导出导入 ----------
+
+@app.get("/api/snapshots")
+def snapshots():
+    files = sorted(store.BACKUP_DIR.glob("snapshot-*.json"), reverse=True)
+    return [{"name": f.name, "size": f.stat().st_size} for f in files]
+
+
+@app.get("/api/snapshots/{name}")
+def snapshot_download(name: str):
+    if "/" in name or "\\" in name or not name.startswith("snapshot-"):
+        raise HTTPException(400, "名字不对")
+    f = store.BACKUP_DIR / name
+    if not f.is_file():
+        raise HTTPException(404, "快照不存在")
+    return FileResponse(f, filename=name, media_type="application/json")
+
+
+@app.post("/api/restore")
+async def restore(request: Request):
+    body = await request.json()
+    docs = body.get("docs")
+    if docs is None and body.get("name"):
+        f = store.BACKUP_DIR / body["name"]
+        if "/" in body["name"] or not f.is_file():
+            raise HTTPException(404, "快照不存在")
+        docs = json.loads(f.read_text(encoding="utf-8"))["docs"]
+    if docs is None:
+        raise HTTPException(400, "缺少 docs 或 name")
+    n = store.restore_docs(docs)
+    return {"ok": True, "restored": n}
+
+
+@app.get("/api/export/all")
+def export_all():
+    payload = json.dumps({"version": 1, "docs": store.all_docs()},
+                         ensure_ascii=False, indent=1)
+    return Response(payload, media_type="application/json",
+                    headers={"Content-Disposition": "attachment; filename=weight-all.json"})
+
+
+@app.get("/api/export/records.csv")
+def export_csv():
+    metrics = {m["id"]: m["data"] for m in store.get_all("metrics")}
+    buf = io.StringIO()
+    w = csv.writer(buf)
+    w.writerow(["指标", "数值", "单位", "时间", "来源", "备注"])
+    for r in store.get_all("records"):
+        d = r["data"]
+        m = next((v for v in metrics.values() if v.get("code") == d.get("metric_code")), {})
+        w.writerow([m.get("name", d.get("metric_code")), d.get("value"), d.get("unit") or m.get("unit", ""),
+                    d.get("at"), d.get("source", ""), d.get("note", "")])
+    return Response("\ufeff" + buf.getvalue(), media_type="text/csv; charset=utf-8",
+                    headers={"Content-Disposition": "attachment; filename=records.csv"})
+
+
+# ---------- 阶段判定 ----------
+
+@app.get("/api/stage-suggestion")
+def stage_suggestion(window: int = 14):
+    profile = store.get_doc("profile", "me")
+    stages = [{**d["data"], "_id": d["id"]} for d in store.get_all("stages")]
+    return engine.suggest(
+        (profile or {}).get("data", {}),
+        stages,
+        [d["data"] for d in store.get_all("records")],
+        [d["data"] for d in store.get_all("workouts")],
+        [d["data"] for d in store.get_all("metrics")],
+        window,
+    )
+
+
+# ---------- 图片识别 ----------
+
+@app.post("/api/recognize")
+async def recognize_api(image: UploadFile = File(...)):
+    cfg = store.get_meta("ai") or {}
+    raw = await image.read()
+    if not raw:
+        raise HTTPException(400, "图片为空")
+    mime = image.content_type or "image/jpeg"
+    metrics = [d["data"] for d in store.get_all("metrics")]
+    try:
+        return await recognize.recognize_image(raw, mime, cfg, metrics)
+    except Exception as e:
+        raise HTTPException(400, str(e))
+
+
+# ---------- 前端静态页面 ----------
+
+@app.get("/{full_path:path}")
+def spa(full_path: str):
+    if full_path.startswith("api/"):
+        raise HTTPException(404)
+    f = DIST / full_path
+    if full_path and f.is_file():
+        return FileResponse(f)
+    index = DIST / "index.html"
+    if not index.is_file():
+        return Response("前端尚未构建:请在 frontend 目录执行 npm install && npm run build",
+                        media_type="text/plain; charset=utf-8")
+    return FileResponse(index)

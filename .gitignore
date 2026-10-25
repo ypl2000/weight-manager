@@ -1,0 +1,9 @@
+# 运行时/依赖(不入库)
+backend/.venv/
+backend/__pycache__/
+frontend/node_modules/
+frontend/dist/
+# 用户隐私数据(数据库与备份绝不入库)
+backend/data/
+# 工具生成
+.zcode/
