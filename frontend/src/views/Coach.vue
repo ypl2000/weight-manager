@@ -28,7 +28,7 @@
       <p v-if="errMsg" class="banner warn">{{ errMsg }}</p>
       <p v-else-if="partial" class="banner">生成中断:以下内容可能不完整。</p>
 
-      <div v-if="content || generating" ref="reportBox" class="report">{{ content }}<span v-if="generating" class="caret">▍</span></div>
+      <div v-if="content || generating" ref="reportBox" class="report"><span v-html="renderMd(content)"></span><span v-if="generating" class="caret">▍</span></div>
     </section>
 
     <!-- 问教练 -->
@@ -68,7 +68,7 @@
             <button class="small danger" @click.stop="delQa(qa)">删</button>
           </span>
         </div>
-        <div v-if="qaExpanded[qa.id]" class="report">{{ qa.data.answer }}</div>
+        <div v-if="qaExpanded[qa.id]" class="report" v-html="renderMd(qa.data.answer)"></div>
       </div>
     </section>
 
@@ -94,7 +94,7 @@
             <button class="small danger" @click.stop="delReport(h)">删</button>
           </span>
         </div>
-        <div v-if="expanded[h.id]" class="report">{{ h.data.content }}</div>
+        <div v-if="expanded[h.id]" class="report" v-html="renderMd(h.data.content)"></div>
       </div>
     </section>
   </div>
@@ -106,6 +106,42 @@ import { S, fmtLocal, toast } from '../store'
 import { api, pin, queueWrite } from '../sync'
 
 const DAY_OPTIONS = [7, 30, 90]
+
+// ---- 轻量 Markdown 渲染 ----
+// 模型输出是 markdown,按纯文本会把井号/星号原样显示出来。
+// 这里先对整体做 HTML 转义防注入,再转换有限语法:
+//   行首 "## "/"### " → 小标题;**xx** → 加粗;行首 "- " → 列表项;
+//   其余内容保留原换行(靠 .report 的 pre-wrap 展示),不支持的语法原样显示。
+function renderMd(src) {
+  if (!src) return ''
+  const esc = (s) => String(s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+  const bold = (s) => s.replace(/\*\*([^*\n]+)\*\*/g, '<b>$1</b>')
+  let html = ''
+  let inList = false
+  const closeList = () => { if (inList) { html += '</ul>'; inList = false } }
+  for (const raw of String(src).replace(/\r\n/g, '\n').split('\n')) {
+    const line = esc(raw) // 先转义,后续插入的 <b>/<ul> 等标签才是可信的
+    let m = line.match(/^(#{2,3})\s+(.+)$/)
+    if (m) { // 标题
+      closeList()
+      html = html.replace(/\n$/, '')
+      html += `<div class="md-h md-h${m[1].length}">${bold(m[2])}</div>`
+      continue
+    }
+    m = line.match(/^-\s+(.+)$/)
+    if (m) { // 列表项
+      if (!inList) { html = html.replace(/\n$/, ''); html += '<ul class="md-ul">'; inList = true }
+      html += `<li>${bold(m[1])}</li>`
+      continue
+    }
+    closeList()
+    html += bold(line) + '\n' // 普通行:保留换行,空行即段落间距
+  }
+  closeList()
+  return html.replace(/\n+$/, '') // 去掉末尾换行,流式光标可紧跟正文
+}
 
 // ---- 教练 SSE 流式请求(生成解读 / 问教练 共用) ----
 // SSE 流最长静默时间:大模型"思考"阶段可能 60 秒以上才出首字节,
@@ -397,4 +433,10 @@ onUnmounted(() => {
 .hist-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; min-width: 0; }
 .hist-ops { display: flex; align-items: center; gap: 8px; flex: none; }
 .q-text { min-width: 0; flex: 1 1 140px; word-break: break-word; }
+
+/* 轻量 markdown 呈现(v-html 注入的节点不带 scoped 属性,需 :deep 穿透) */
+.report :deep(.md-h2) { font-weight: 700; font-size: 15px; margin: 12px 0 4px; }
+.report :deep(.md-h3) { font-weight: 700; font-size: 14px; margin: 10px 0 4px; }
+.report :deep(.md-ul) { margin: 4px 0; padding-left: 20px; }
+.report :deep(.md-ul li) { margin: 2px 0; }
 </style>
