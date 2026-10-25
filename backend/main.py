@@ -287,16 +287,31 @@ async def import_commit(request: Request):
 
 @app.post("/api/coach/report")
 async def coach_report(request: Request):
+    def _sse(payload):
+        return "data: " + json.dumps(payload, ensure_ascii=False) + "\n\n"
+
+    # 校验在返回 StreamingResponse 之前完成(响应开始后不能再读 body,
+    # BaseHTTPMiddleware 下会死锁);校验失败只发一条 error 事件,不调模型。
     try:
         body = await request.json()
-    except Exception:
-        body = {}
-    try:
-        days = max(1, min(int(body.get("days") or 30), 365))
-    except (TypeError, ValueError):
-        days = 30
+    except Exception:  # 空 body / 坏 JSON
+        body = None
+    error = None
+    days = 30  # 缺省 30
+    if isinstance(body, dict):
+        raw = body.get("days", 30)
+        # bool 是 int 的子类,须排除;仅接受 1-365 的整数
+        if isinstance(raw, bool) or not isinstance(raw, int) or not 1 <= raw <= 365:
+            error = "days 必须是1-365的整数"
+        else:
+            days = raw
+    else:
+        error = "请求体必须是JSON对象"
 
     async def gen():
+        if error:
+            yield _sse({"error": error})
+            return
         async for ev in coach.stream_report(days):
             if "delta" in ev:
                 payload = {"delta": ev["delta"]}
@@ -306,7 +321,7 @@ async def coach_report(request: Request):
                 payload = {"done": True, "report_id": ev["report_id"]}
             else:
                 continue
-            yield "data: " + json.dumps(payload, ensure_ascii=False) + "\n\n"
+            yield _sse(payload)
 
     return StreamingResponse(gen(), media_type="text/event-stream",
                              headers={"Cache-Control": "no-cache",
