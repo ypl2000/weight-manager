@@ -7,3 +7,5 @@ frontend/dist/
 backend/data/
 # 工具生成
 .zcode/
+# 用户原始素材(不入库,仅整理版入库)
+知识汇总.md
