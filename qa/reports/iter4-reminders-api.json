@@ -1,0 +1,212 @@
+{
+  "captured_at": "2026-10-25T17:27:13.823Z",
+  "endpoint": "GET /api/reminders",
+  "baseline": {
+    "weight": {
+      "due": true,
+      "reason": "今天还没有记录",
+      "rule": "每天 1 次"
+    },
+    "waist": {
+      "due": false,
+      "reason": "1 天前测过（10-25）",
+      "rule": "每周 1 次"
+    },
+    "codes": [
+      "weight",
+      "waist"
+    ]
+  },
+  "sequence": [
+    {
+      "step": "S0 基线:体重今日未录→due / 腰围1天前→not due",
+      "pass": true,
+      "expect": {
+        "weight": {
+          "due": true,
+          "reason": "今天还没有记录",
+          "rule": "每天 1 次"
+        },
+        "waist": {
+          "due": false,
+          "reason": "1 天前测过（10-25）",
+          "rule": "每周 1 次"
+        },
+        "codes": [
+          "weight",
+          "waist"
+        ]
+      },
+      "got": {
+        "weight": {
+          "due": true,
+          "reason": "今天还没有记录",
+          "rule": "每天 1 次"
+        },
+        "waist": {
+          "due": false,
+          "reason": "1 天前测过（10-25）",
+          "rule": "每周 1 次"
+        },
+        "codes": [
+          "weight",
+          "waist"
+        ]
+      }
+    },
+    {
+      "step": "S1 体重今天已录(77.77) → due=false \"今天已记录\"",
+      "pass": true,
+      "expect": {
+        "due": false,
+        "reason": "今天已记录",
+        "rule": "每天 1 次"
+      },
+      "got": {
+        "due": false,
+        "reason": "今天已记录",
+        "rule": "每天 1 次"
+      }
+    },
+    {
+      "step": "S2 加10天前腰围测试记录,最近一条仍是昨天96 → not due \"1 天前测过\"",
+      "pass": true,
+      "expect": {
+        "due": false,
+        "reason": "1 天前测过（10-25）",
+        "rule": "每周 1 次"
+      },
+      "got": {
+        "due": false,
+        "reason": "1 天前测过（10-25）",
+        "rule": "每周 1 次"
+      }
+    },
+    {
+      "step": "S3 软删真实腰围后,最近一条=10天前 → due=true \"距上次测量已 10 天\"",
+      "pass": true,
+      "expect": {
+        "due": true,
+        "reason": "距上次测量已 10 天",
+        "rule": "每周 1 次"
+      },
+      "got": {
+        "due": true,
+        "reason": "距上次测量已 10 天",
+        "rule": "每周 1 次"
+      }
+    },
+    {
+      "step": "S4 腰围无任何记录 → due=true \"还没有记录过\"",
+      "pass": true,
+      "expect": {
+        "due": true,
+        "reason": "还没有记录过",
+        "rule": "每周 1 次"
+      },
+      "got": {
+        "due": true,
+        "reason": "还没有记录过",
+        "rule": "每周 1 次"
+      }
+    },
+    {
+      "step": "S5 恢复真实腰围96 → due=false \"1 天前测过（10-25）\"",
+      "pass": true,
+      "expect": {
+        "due": false,
+        "reason": "1 天前测过（10-25）",
+        "rule": "每周 1 次"
+      },
+      "got": {
+        "due": false,
+        "reason": "1 天前测过（10-25）",
+        "rule": "每周 1 次"
+      }
+    },
+    {
+      "step": "S6 删除测试体重77.77 → due=true \"今天还没有记录\"",
+      "pass": true,
+      "expect": {
+        "due": true,
+        "reason": "今天还没有记录",
+        "rule": "每天 1 次"
+      },
+      "got": {
+        "due": true,
+        "reason": "今天还没有记录",
+        "rule": "每天 1 次"
+      }
+    },
+    {
+      "step": "S7 腰围指标停用 → items 只有 weight",
+      "pass": true,
+      "expect": [
+        "weight"
+      ],
+      "got": [
+        "weight"
+      ]
+    },
+    {
+      "step": "S7b 停用期间 weight 规则不受影响",
+      "pass": true,
+      "expect": {
+        "due": true,
+        "reason": "今天还没有记录",
+        "rule": "每天 1 次"
+      },
+      "got": {
+        "due": true,
+        "reason": "今天还没有记录",
+        "rule": "每天 1 次"
+      }
+    },
+    {
+      "step": "S8 恢复腰围指标 → items 回到 [weight, waist]",
+      "pass": true,
+      "expect": [
+        "weight",
+        "waist"
+      ],
+      "got": [
+        "weight",
+        "waist"
+      ]
+    }
+  ],
+  "final_state": {
+    "reminders": {
+      "weight": {
+        "due": true,
+        "reason": "今天还没有记录",
+        "rule": "每天 1 次"
+      },
+      "waist": {
+        "due": false,
+        "reason": "1 天前测过（10-25）",
+        "rule": "每周 1 次"
+      },
+      "codes": [
+        "weight",
+        "waist"
+      ]
+    },
+    "recordsVisible": 8,
+    "recordsValues": [
+      "bodyfat:25.1",
+      "bodyfat:25.8",
+      "waist:96",
+      "weight:88.5",
+      "weight:88.7",
+      "weight:88.9",
+      "weight:89.1",
+      "weight:89.4"
+    ],
+    "waistMetricActive": true,
+    "waistDataEqualsOriginal": true,
+    "realWaistRestored": true,
+    "qaResidue": 0
+  },
+  "all_pass": true
+}
