@@ -285,11 +285,16 @@ async def import_commit(request: Request):
                 skipped += 1
                 continue
             doc_id = f"imp_{code}_{epoch}"  # 确定性 id:同一秒同一指标只留一条
-            if store.get_doc("records", doc_id):
-                # 已存在即跳过(首写优先)。不能按"值不同就覆盖":同一秒两个来源数值不同时
-                # 会来回改写,重复 commit 的 imported 永远不归 0,且每轮都产生 history/同步增量。
+            existing = store.get_doc("records", doc_id)
+            if existing and not existing.get("deleted"):
+                # D6:仅"已存在且未删除"才跳过。存活记录一律首写优先不覆盖(值相同=幂等重导,
+                # 值不同=冲突也不覆盖):同一秒两个来源数值不同时若按新值覆盖会来回改写,
+                # 重复 commit 的 imported 永远不归 0,且每轮都产生 history/同步增量。
                 skipped += 1
                 continue
+            # 其余两种情况写入:不存在 → 首次导入;existing.deleted=true → 墓碑占位,
+            # 正常写入复活(D6:deleted=0,updated_at=now;upsert 按 updated_at LWW,
+            # now 必新于墓碑,必生效),误删数据可通过重导同一文件恢复。
             store.upsert_doc("records", doc_id,
                              {"metric_code": code, "value": val,
                               "unit": units.get(code, ""), "at": row.get("at"),

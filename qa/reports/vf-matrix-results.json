@@ -1,0 +1,1511 @@
+[
+  {
+    "viewport": "414x896",
+    "page": "今日",
+    "pass": true,
+    "fails": [],
+    "measure": {
+      "v1": {
+        "sw": 414,
+        "cw": 414,
+        "bsw": 414,
+        "bcw": 414,
+        "iw": 414
+      },
+      "v2": {
+        "pos": "fixed",
+        "left": 0,
+        "width": 414,
+        "bottom": 896,
+        "radius": "0px",
+        "centerX": 207,
+        "shadow": false,
+        "iw": 414
+      },
+      "v3": {
+        "display": "block",
+        "cols": 2,
+        "aBottom": 634,
+        "bBottom": 1602.5,
+        "aTop": 173.5,
+        "bTop": 646,
+        "aRight": 398,
+        "bLeft": 16,
+        "tallest": 629,
+        "bottomDiff": 968.5
+      },
+      "v5": {
+        "bx": 16,
+        "bw": 382,
+        "px": 16,
+        "pw": 382,
+        "text": "⚖️ 该测体重了 · 今天还没有记录（每"
+      },
+      "v8": {
+        "badCount": 0,
+        "bad": []
+      },
+      "v9": {
+        "text": "今日",
+        "w": 131.4,
+        "font": "system-ui, -apple-system, \"Segoe UI\", \"Microsoft YaHei\", san"
+      }
+    },
+    "preview": null
+  },
+  {
+    "viewport": "414x896",
+    "page": "数据",
+    "pass": true,
+    "fails": [],
+    "measure": {
+      "v1": {
+        "sw": 414,
+        "cw": 414,
+        "bsw": 414,
+        "bcw": 414,
+        "iw": 414
+      },
+      "v2": {
+        "pos": "fixed",
+        "left": 0,
+        "width": 414,
+        "bottom": 896,
+        "radius": "0px",
+        "centerX": 207,
+        "shadow": false,
+        "iw": 414
+      },
+      "v8": {
+        "badCount": 0,
+        "bad": []
+      },
+      "v9": {
+        "text": "数据",
+        "w": 130.5,
+        "font": "system-ui, -apple-system, \"Segoe UI\", \"Microsoft YaHei\", san"
+      }
+    },
+    "preview": null
+  },
+  {
+    "viewport": "414x896",
+    "page": "阶段",
+    "pass": true,
+    "fails": [],
+    "measure": {
+      "v1": {
+        "sw": 414,
+        "cw": 414,
+        "bsw": 414,
+        "bcw": 414,
+        "iw": 414
+      },
+      "v2": {
+        "pos": "fixed",
+        "left": 0,
+        "width": 414,
+        "bottom": 896,
+        "radius": "0px",
+        "centerX": 207,
+        "shadow": false,
+        "iw": 414
+      },
+      "v8": {
+        "badCount": 0,
+        "bad": []
+      },
+      "v9": {
+        "text": "阶段",
+        "w": 156,
+        "font": "system-ui, -apple-system, \"Segoe UI\", \"Microsoft YaHei\", san"
+      }
+    },
+    "preview": null
+  },
+  {
+    "viewport": "414x896",
+    "page": "训练",
+    "pass": true,
+    "fails": [],
+    "measure": {
+      "v1": {
+        "sw": 414,
+        "cw": 414,
+        "bsw": 414,
+        "bcw": 414,
+        "iw": 414
+      },
+      "v2": {
+        "pos": "fixed",
+        "left": 0,
+        "width": 414,
+        "bottom": 896,
+        "radius": "0px",
+        "centerX": 207,
+        "shadow": false,
+        "iw": 414
+      },
+      "v8": {
+        "badCount": 0,
+        "bad": []
+      },
+      "v9": {
+        "text": "训练",
+        "w": 153.1,
+        "font": "system-ui, -apple-system, \"Segoe UI\", \"Microsoft YaHei\", san"
+      }
+    },
+    "preview": null
+  },
+  {
+    "viewport": "414x896",
+    "page": "设置",
+    "pass": true,
+    "fails": [],
+    "measure": {
+      "v1": {
+        "sw": 414,
+        "cw": 414,
+        "bsw": 414,
+        "bcw": 414,
+        "iw": 414
+      },
+      "v2": {
+        "pos": "fixed",
+        "left": 0,
+        "width": 414,
+        "bottom": 896,
+        "radius": "0px",
+        "centerX": 207,
+        "shadow": false,
+        "iw": 414
+      },
+      "v4": {
+        "display": "block",
+        "tracks": "none",
+        "secW": 382,
+        "aboutW": 382,
+        "pageInnerW": 350
+      },
+      "v8": {
+        "badCount": 0,
+        "bad": []
+      },
+      "v9": {
+        "text": "设置",
+        "w": 188.5,
+        "font": "system-ui, -apple-system, \"Segoe UI\", \"Microsoft YaHei\", san"
+      }
+    },
+    "preview": {
+      "ths": 6,
+      "wrapScrollW": 332,
+      "wrapClientW": 332,
+      "cardRight": 398,
+      "cardW": 382,
+      "iw": 414
+    }
+  },
+  {
+    "viewport": "414x896",
+    "page": "教练",
+    "pass": true,
+    "fails": [],
+    "measure": {
+      "v1": {
+        "sw": 414,
+        "cw": 414,
+        "bsw": 414,
+        "bcw": 414,
+        "iw": 414
+      },
+      "v2": {
+        "pos": "fixed",
+        "left": 0,
+        "width": 414,
+        "bottom": 896,
+        "radius": "0px",
+        "centerX": 207,
+        "shadow": false,
+        "iw": 414
+      },
+      "v3": {
+        "display": "block",
+        "cols": 2,
+        "aBottom": 429,
+        "bBottom": 707,
+        "aTop": 82.5,
+        "bTop": 441,
+        "aRight": 398,
+        "bLeft": 16,
+        "tallest": 184.5,
+        "bottomDiff": 278
+      },
+      "v8": {
+        "badCount": 0,
+        "bad": []
+      },
+      "v9": {
+        "text": "🤖 AI 教练",
+        "w": 211.1,
+        "font": "system-ui, -apple-system, \"Segoe UI\", \"Microsoft YaHei\", san"
+      }
+    },
+    "preview": null
+  },
+  {
+    "viewport": "768x900",
+    "page": "今日",
+    "pass": true,
+    "fails": [],
+    "measure": {
+      "v1": {
+        "sw": 768,
+        "cw": 768,
+        "bsw": 768,
+        "bcw": 768,
+        "iw": 768
+      },
+      "v2": {
+        "pos": "fixed",
+        "left": 0,
+        "width": 768,
+        "bottom": 900,
+        "radius": "0px",
+        "centerX": 384,
+        "shadow": false,
+        "iw": 768
+      },
+      "v3": {
+        "display": "block",
+        "cols": 2,
+        "aBottom": 622.5,
+        "bBottom": 1528,
+        "aTop": 181.5,
+        "bTop": 634.5,
+        "aRight": 748,
+        "bLeft": 20,
+        "tallest": 566,
+        "bottomDiff": 905.5
+      },
+      "v5": {
+        "bx": 20,
+        "bw": 728,
+        "px": 20,
+        "pw": 728,
+        "text": "⚖️ 该测体重了 · 今天还没有记录（每"
+      },
+      "v8": {
+        "badCount": 0,
+        "bad": []
+      },
+      "v9": {
+        "text": "今日",
+        "w": 131.4,
+        "font": "system-ui, -apple-system, \"Segoe UI\", \"Microsoft YaHei\", san"
+      }
+    },
+    "preview": null
+  },
+  {
+    "viewport": "768x900",
+    "page": "数据",
+    "pass": true,
+    "fails": [],
+    "measure": {
+      "v1": {
+        "sw": 768,
+        "cw": 768,
+        "bsw": 768,
+        "bcw": 768,
+        "iw": 768
+      },
+      "v2": {
+        "pos": "fixed",
+        "left": 0,
+        "width": 768,
+        "bottom": 900,
+        "radius": "0px",
+        "centerX": 384,
+        "shadow": false,
+        "iw": 768
+      },
+      "v8": {
+        "badCount": 0,
+        "bad": []
+      },
+      "v9": {
+        "text": "数据",
+        "w": 130.5,
+        "font": "system-ui, -apple-system, \"Segoe UI\", \"Microsoft YaHei\", san"
+      }
+    },
+    "preview": null
+  },
+  {
+    "viewport": "768x900",
+    "page": "阶段",
+    "pass": true,
+    "fails": [],
+    "measure": {
+      "v1": {
+        "sw": 768,
+        "cw": 768,
+        "bsw": 768,
+        "bcw": 768,
+        "iw": 768
+      },
+      "v2": {
+        "pos": "fixed",
+        "left": 0,
+        "width": 768,
+        "bottom": 900,
+        "radius": "0px",
+        "centerX": 384,
+        "shadow": false,
+        "iw": 768
+      },
+      "v8": {
+        "badCount": 0,
+        "bad": []
+      },
+      "v9": {
+        "text": "阶段",
+        "w": 156,
+        "font": "system-ui, -apple-system, \"Segoe UI\", \"Microsoft YaHei\", san"
+      }
+    },
+    "preview": null
+  },
+  {
+    "viewport": "768x900",
+    "page": "训练",
+    "pass": true,
+    "fails": [],
+    "measure": {
+      "v1": {
+        "sw": 768,
+        "cw": 768,
+        "bsw": 768,
+        "bcw": 768,
+        "iw": 768
+      },
+      "v2": {
+        "pos": "fixed",
+        "left": 0,
+        "width": 768,
+        "bottom": 900,
+        "radius": "0px",
+        "centerX": 384,
+        "shadow": false,
+        "iw": 768
+      },
+      "v8": {
+        "badCount": 0,
+        "bad": []
+      },
+      "v9": {
+        "text": "训练",
+        "w": 153.1,
+        "font": "system-ui, -apple-system, \"Segoe UI\", \"Microsoft YaHei\", san"
+      }
+    },
+    "preview": null
+  },
+  {
+    "viewport": "768x900",
+    "page": "设置",
+    "pass": true,
+    "fails": [],
+    "measure": {
+      "v1": {
+        "sw": 768,
+        "cw": 768,
+        "bsw": 768,
+        "bcw": 768,
+        "iw": 768
+      },
+      "v2": {
+        "pos": "fixed",
+        "left": 0,
+        "width": 768,
+        "bottom": 900,
+        "radius": "0px",
+        "centerX": 384,
+        "shadow": false,
+        "iw": 768
+      },
+      "v4": {
+        "display": "block",
+        "tracks": "none",
+        "secW": 728,
+        "aboutW": 728,
+        "pageInnerW": 696
+      },
+      "v8": {
+        "badCount": 0,
+        "bad": []
+      },
+      "v9": {
+        "text": "设置",
+        "w": 188.5,
+        "font": "system-ui, -apple-system, \"Segoe UI\", \"Microsoft YaHei\", san"
+      }
+    },
+    "preview": {
+      "ths": 6,
+      "wrapScrollW": 678,
+      "wrapClientW": 678,
+      "cardRight": 748,
+      "cardW": 728,
+      "iw": 768
+    }
+  },
+  {
+    "viewport": "768x900",
+    "page": "教练",
+    "pass": true,
+    "fails": [],
+    "measure": {
+      "v1": {
+        "sw": 768,
+        "cw": 768,
+        "bsw": 768,
+        "bcw": 768,
+        "iw": 768
+      },
+      "v2": {
+        "pos": "fixed",
+        "left": 0,
+        "width": 768,
+        "bottom": 900,
+        "radius": "0px",
+        "centerX": 384,
+        "shadow": false,
+        "iw": 768
+      },
+      "v3": {
+        "display": "block",
+        "cols": 2,
+        "aBottom": 437,
+        "bBottom": 692,
+        "aTop": 90.5,
+        "bTop": 449,
+        "aRight": 748,
+        "bLeft": 20,
+        "tallest": 184.5,
+        "bottomDiff": 255
+      },
+      "v8": {
+        "badCount": 0,
+        "bad": []
+      },
+      "v9": {
+        "text": "🤖 AI 教练",
+        "w": 211.1,
+        "font": "system-ui, -apple-system, \"Segoe UI\", \"Microsoft YaHei\", san"
+      }
+    },
+    "preview": null
+  },
+  {
+    "viewport": "900x900",
+    "page": "今日",
+    "pass": true,
+    "fails": [],
+    "measure": {
+      "v1": {
+        "sw": 900,
+        "cw": 900,
+        "bsw": 900,
+        "bcw": 900,
+        "iw": 900
+      },
+      "v2": {
+        "pos": "fixed",
+        "left": 0,
+        "width": 900,
+        "bottom": 900,
+        "radius": "0px",
+        "centerX": 450,
+        "shadow": false,
+        "iw": 900
+      },
+      "v3": {
+        "display": "block",
+        "cols": 2,
+        "aBottom": 622.5,
+        "bBottom": 1528,
+        "aTop": 181.5,
+        "bTop": 634.5,
+        "aRight": 814,
+        "bLeft": 86,
+        "tallest": 566,
+        "bottomDiff": 905.5
+      },
+      "v5": {
+        "bx": 86,
+        "bw": 728,
+        "px": 86,
+        "pw": 728,
+        "text": "⚖️ 该测体重了 · 今天还没有记录（每"
+      },
+      "v8": {
+        "badCount": 0,
+        "bad": []
+      },
+      "v9": {
+        "text": "今日",
+        "w": 131.4,
+        "font": "system-ui, -apple-system, \"Segoe UI\", \"Microsoft YaHei\", san"
+      }
+    },
+    "preview": null
+  },
+  {
+    "viewport": "900x900",
+    "page": "数据",
+    "pass": true,
+    "fails": [],
+    "measure": {
+      "v1": {
+        "sw": 900,
+        "cw": 900,
+        "bsw": 900,
+        "bcw": 900,
+        "iw": 900
+      },
+      "v2": {
+        "pos": "fixed",
+        "left": 0,
+        "width": 900,
+        "bottom": 900,
+        "radius": "0px",
+        "centerX": 450,
+        "shadow": false,
+        "iw": 900
+      },
+      "v8": {
+        "badCount": 0,
+        "bad": []
+      },
+      "v9": {
+        "text": "数据",
+        "w": 130.5,
+        "font": "system-ui, -apple-system, \"Segoe UI\", \"Microsoft YaHei\", san"
+      }
+    },
+    "preview": null
+  },
+  {
+    "viewport": "900x900",
+    "page": "阶段",
+    "pass": true,
+    "fails": [],
+    "measure": {
+      "v1": {
+        "sw": 900,
+        "cw": 900,
+        "bsw": 900,
+        "bcw": 900,
+        "iw": 900
+      },
+      "v2": {
+        "pos": "fixed",
+        "left": 0,
+        "width": 900,
+        "bottom": 900,
+        "radius": "0px",
+        "centerX": 450,
+        "shadow": false,
+        "iw": 900
+      },
+      "v8": {
+        "badCount": 0,
+        "bad": []
+      },
+      "v9": {
+        "text": "阶段",
+        "w": 156,
+        "font": "system-ui, -apple-system, \"Segoe UI\", \"Microsoft YaHei\", san"
+      }
+    },
+    "preview": null
+  },
+  {
+    "viewport": "900x900",
+    "page": "训练",
+    "pass": true,
+    "fails": [],
+    "measure": {
+      "v1": {
+        "sw": 900,
+        "cw": 900,
+        "bsw": 900,
+        "bcw": 900,
+        "iw": 900
+      },
+      "v2": {
+        "pos": "fixed",
+        "left": 0,
+        "width": 900,
+        "bottom": 900,
+        "radius": "0px",
+        "centerX": 450,
+        "shadow": false,
+        "iw": 900
+      },
+      "v8": {
+        "badCount": 0,
+        "bad": []
+      },
+      "v9": {
+        "text": "训练",
+        "w": 153.1,
+        "font": "system-ui, -apple-system, \"Segoe UI\", \"Microsoft YaHei\", san"
+      }
+    },
+    "preview": null
+  },
+  {
+    "viewport": "900x900",
+    "page": "设置",
+    "pass": true,
+    "fails": [],
+    "measure": {
+      "v1": {
+        "sw": 900,
+        "cw": 900,
+        "bsw": 900,
+        "bcw": 900,
+        "iw": 900
+      },
+      "v2": {
+        "pos": "fixed",
+        "left": 0,
+        "width": 900,
+        "bottom": 900,
+        "radius": "0px",
+        "centerX": 450,
+        "shadow": false,
+        "iw": 900
+      },
+      "v4": {
+        "display": "block",
+        "tracks": "none",
+        "secW": 728,
+        "aboutW": 728,
+        "pageInnerW": 696
+      },
+      "v8": {
+        "badCount": 0,
+        "bad": []
+      },
+      "v9": {
+        "text": "设置",
+        "w": 188.5,
+        "font": "system-ui, -apple-system, \"Segoe UI\", \"Microsoft YaHei\", san"
+      }
+    },
+    "preview": {
+      "ths": 6,
+      "wrapScrollW": 678,
+      "wrapClientW": 678,
+      "cardRight": 814,
+      "cardW": 728,
+      "iw": 900
+    }
+  },
+  {
+    "viewport": "900x900",
+    "page": "教练",
+    "pass": true,
+    "fails": [],
+    "measure": {
+      "v1": {
+        "sw": 900,
+        "cw": 900,
+        "bsw": 900,
+        "bcw": 900,
+        "iw": 900
+      },
+      "v2": {
+        "pos": "fixed",
+        "left": 0,
+        "width": 900,
+        "bottom": 900,
+        "radius": "0px",
+        "centerX": 450,
+        "shadow": false,
+        "iw": 900
+      },
+      "v3": {
+        "display": "block",
+        "cols": 2,
+        "aBottom": 437,
+        "bBottom": 692,
+        "aTop": 90.5,
+        "bTop": 449,
+        "aRight": 814,
+        "bLeft": 86,
+        "tallest": 184.5,
+        "bottomDiff": 255
+      },
+      "v8": {
+        "badCount": 0,
+        "bad": []
+      },
+      "v9": {
+        "text": "🤖 AI 教练",
+        "w": 211.1,
+        "font": "system-ui, -apple-system, \"Segoe UI\", \"Microsoft YaHei\", san"
+      }
+    },
+    "preview": null
+  },
+  {
+    "viewport": "1024x900",
+    "page": "今日",
+    "pass": true,
+    "fails": [],
+    "measure": {
+      "v1": {
+        "sw": 1024,
+        "cw": 1024,
+        "bsw": 1024,
+        "bcw": 1024,
+        "iw": 1024
+      },
+      "v2": {
+        "pos": "fixed",
+        "left": 377.3,
+        "width": 269.3,
+        "bottom": 884,
+        "radius": "999px",
+        "centerX": 512,
+        "shadow": true,
+        "iw": 1024
+      },
+      "v3": {
+        "display": "flex",
+        "cols": 2,
+        "aBottom": 922.5,
+        "bBottom": 826.5,
+        "aTop": 185.5,
+        "bTop": 185.5,
+        "aRight": 504,
+        "bLeft": 520,
+        "tallest": 566,
+        "bottomDiff": 96
+      },
+      "v5": {
+        "bx": 32,
+        "bw": 960,
+        "px": 32,
+        "pw": 960,
+        "text": "⚖️ 该测体重了 · 今天还没有记录（每"
+      },
+      "v8": {
+        "badCount": 0,
+        "bad": []
+      },
+      "v9": {
+        "text": "今日",
+        "w": 131.4,
+        "font": "system-ui, -apple-system, \"Segoe UI\", \"Microsoft YaHei\", san"
+      }
+    },
+    "preview": null
+  },
+  {
+    "viewport": "1024x900",
+    "page": "数据",
+    "pass": true,
+    "fails": [],
+    "measure": {
+      "v1": {
+        "sw": 1024,
+        "cw": 1024,
+        "bsw": 1024,
+        "bcw": 1024,
+        "iw": 1024
+      },
+      "v2": {
+        "pos": "fixed",
+        "left": 377.3,
+        "width": 269.3,
+        "bottom": 884,
+        "radius": "999px",
+        "centerX": 512,
+        "shadow": true,
+        "iw": 1024
+      },
+      "v8": {
+        "badCount": 0,
+        "bad": []
+      },
+      "v9": {
+        "text": "数据",
+        "w": 130.5,
+        "font": "system-ui, -apple-system, \"Segoe UI\", \"Microsoft YaHei\", san"
+      }
+    },
+    "preview": null
+  },
+  {
+    "viewport": "1024x900",
+    "page": "阶段",
+    "pass": true,
+    "fails": [],
+    "measure": {
+      "v1": {
+        "sw": 1024,
+        "cw": 1024,
+        "bsw": 1024,
+        "bcw": 1024,
+        "iw": 1024
+      },
+      "v2": {
+        "pos": "fixed",
+        "left": 377.3,
+        "width": 269.3,
+        "bottom": 884,
+        "radius": "999px",
+        "centerX": 512,
+        "shadow": true,
+        "iw": 1024
+      },
+      "v8": {
+        "badCount": 0,
+        "bad": []
+      },
+      "v9": {
+        "text": "阶段",
+        "w": 156,
+        "font": "system-ui, -apple-system, \"Segoe UI\", \"Microsoft YaHei\", san"
+      }
+    },
+    "preview": null
+  },
+  {
+    "viewport": "1024x900",
+    "page": "训练",
+    "pass": true,
+    "fails": [],
+    "measure": {
+      "v1": {
+        "sw": 1024,
+        "cw": 1024,
+        "bsw": 1024,
+        "bcw": 1024,
+        "iw": 1024
+      },
+      "v2": {
+        "pos": "fixed",
+        "left": 377.3,
+        "width": 269.3,
+        "bottom": 884,
+        "radius": "999px",
+        "centerX": 512,
+        "shadow": true,
+        "iw": 1024
+      },
+      "v8": {
+        "badCount": 0,
+        "bad": []
+      },
+      "v9": {
+        "text": "训练",
+        "w": 153.1,
+        "font": "system-ui, -apple-system, \"Segoe UI\", \"Microsoft YaHei\", san"
+      }
+    },
+    "preview": null
+  },
+  {
+    "viewport": "1024x900",
+    "page": "设置",
+    "pass": true,
+    "fails": [],
+    "measure": {
+      "v1": {
+        "sw": 1024,
+        "cw": 1024,
+        "bsw": 1024,
+        "bcw": 1024,
+        "iw": 1024
+      },
+      "v2": {
+        "pos": "fixed",
+        "left": 377.3,
+        "width": 269.3,
+        "bottom": 884,
+        "radius": "999px",
+        "centerX": 512,
+        "shadow": true,
+        "iw": 1024
+      },
+      "v4": {
+        "display": "grid",
+        "tracks": "473px 473px",
+        "secW": 473,
+        "aboutW": 960,
+        "pageInnerW": 960
+      },
+      "v8": {
+        "badCount": 0,
+        "bad": []
+      },
+      "v9": {
+        "text": "设置",
+        "w": 188.5,
+        "font": "system-ui, -apple-system, \"Segoe UI\", \"Microsoft YaHei\", san"
+      }
+    },
+    "preview": null
+  },
+  {
+    "viewport": "1024x900",
+    "page": "教练",
+    "pass": true,
+    "fails": [],
+    "measure": {
+      "v1": {
+        "sw": 1024,
+        "cw": 1024,
+        "bsw": 1024,
+        "bcw": 1024,
+        "iw": 1024
+      },
+      "v2": {
+        "pos": "fixed",
+        "left": 377.3,
+        "width": 269.3,
+        "bottom": 884,
+        "radius": "999px",
+        "centerX": 512,
+        "shadow": true,
+        "iw": 1024
+      },
+      "v3": {
+        "display": "flex",
+        "cols": 2,
+        "aBottom": 360.5,
+        "bBottom": 442,
+        "aTop": 94.5,
+        "bTop": 94.5,
+        "aRight": 504,
+        "bLeft": 520,
+        "tallest": 184.5,
+        "bottomDiff": 81.5
+      },
+      "v8": {
+        "badCount": 0,
+        "bad": []
+      },
+      "v9": {
+        "text": "🤖 AI 教练",
+        "w": 211.1,
+        "font": "system-ui, -apple-system, \"Segoe UI\", \"Microsoft YaHei\", san"
+      }
+    },
+    "preview": null
+  },
+  {
+    "viewport": "1280x900",
+    "page": "今日",
+    "pass": true,
+    "fails": [],
+    "measure": {
+      "v1": {
+        "sw": 1280,
+        "cw": 1280,
+        "bsw": 1280,
+        "bcw": 1280,
+        "iw": 1280
+      },
+      "v2": {
+        "pos": "fixed",
+        "left": 505.3,
+        "width": 269.3,
+        "bottom": 884,
+        "radius": "999px",
+        "centerX": 640,
+        "shadow": true,
+        "iw": 1280
+      },
+      "v3": {
+        "display": "flex",
+        "cols": 2,
+        "aBottom": 922.5,
+        "bBottom": 826.5,
+        "aTop": 185.5,
+        "bTop": 185.5,
+        "aRight": 632,
+        "bLeft": 648,
+        "tallest": 566,
+        "bottomDiff": 96
+      },
+      "v5": {
+        "bx": 132,
+        "bw": 1016,
+        "px": 132,
+        "pw": 1016,
+        "text": "⚖️ 该测体重了 · 今天还没有记录（每"
+      },
+      "v8": {
+        "badCount": 0,
+        "bad": []
+      },
+      "v9": {
+        "text": "今日",
+        "w": 131.4,
+        "font": "system-ui, -apple-system, \"Segoe UI\", \"Microsoft YaHei\", san"
+      }
+    },
+    "preview": null
+  },
+  {
+    "viewport": "1280x900",
+    "page": "数据",
+    "pass": true,
+    "fails": [],
+    "measure": {
+      "v1": {
+        "sw": 1280,
+        "cw": 1280,
+        "bsw": 1280,
+        "bcw": 1280,
+        "iw": 1280
+      },
+      "v2": {
+        "pos": "fixed",
+        "left": 505.3,
+        "width": 269.3,
+        "bottom": 884,
+        "radius": "999px",
+        "centerX": 640,
+        "shadow": true,
+        "iw": 1280
+      },
+      "v8": {
+        "badCount": 0,
+        "bad": []
+      },
+      "v9": {
+        "text": "数据",
+        "w": 130.5,
+        "font": "system-ui, -apple-system, \"Segoe UI\", \"Microsoft YaHei\", san"
+      }
+    },
+    "preview": null
+  },
+  {
+    "viewport": "1280x900",
+    "page": "阶段",
+    "pass": true,
+    "fails": [],
+    "measure": {
+      "v1": {
+        "sw": 1280,
+        "cw": 1280,
+        "bsw": 1280,
+        "bcw": 1280,
+        "iw": 1280
+      },
+      "v2": {
+        "pos": "fixed",
+        "left": 505.3,
+        "width": 269.3,
+        "bottom": 884,
+        "radius": "999px",
+        "centerX": 640,
+        "shadow": true,
+        "iw": 1280
+      },
+      "v8": {
+        "badCount": 0,
+        "bad": []
+      },
+      "v9": {
+        "text": "阶段",
+        "w": 156,
+        "font": "system-ui, -apple-system, \"Segoe UI\", \"Microsoft YaHei\", san"
+      }
+    },
+    "preview": null
+  },
+  {
+    "viewport": "1280x900",
+    "page": "训练",
+    "pass": true,
+    "fails": [],
+    "measure": {
+      "v1": {
+        "sw": 1280,
+        "cw": 1280,
+        "bsw": 1280,
+        "bcw": 1280,
+        "iw": 1280
+      },
+      "v2": {
+        "pos": "fixed",
+        "left": 505.3,
+        "width": 269.3,
+        "bottom": 884,
+        "radius": "999px",
+        "centerX": 640,
+        "shadow": true,
+        "iw": 1280
+      },
+      "v8": {
+        "badCount": 0,
+        "bad": []
+      },
+      "v9": {
+        "text": "训练",
+        "w": 153.1,
+        "font": "system-ui, -apple-system, \"Segoe UI\", \"Microsoft YaHei\", san"
+      }
+    },
+    "preview": null
+  },
+  {
+    "viewport": "1280x900",
+    "page": "设置",
+    "pass": true,
+    "fails": [],
+    "measure": {
+      "v1": {
+        "sw": 1280,
+        "cw": 1280,
+        "bsw": 1280,
+        "bcw": 1280,
+        "iw": 1280
+      },
+      "v2": {
+        "pos": "fixed",
+        "left": 505.3,
+        "width": 269.3,
+        "bottom": 884,
+        "radius": "999px",
+        "centerX": 640,
+        "shadow": true,
+        "iw": 1280
+      },
+      "v4": {
+        "display": "grid",
+        "tracks": "501px 501px",
+        "secW": 501,
+        "aboutW": 1016,
+        "pageInnerW": 1016
+      },
+      "v8": {
+        "badCount": 0,
+        "bad": []
+      },
+      "v9": {
+        "text": "设置",
+        "w": 188.5,
+        "font": "system-ui, -apple-system, \"Segoe UI\", \"Microsoft YaHei\", san"
+      }
+    },
+    "preview": null
+  },
+  {
+    "viewport": "1280x900",
+    "page": "教练",
+    "pass": true,
+    "fails": [],
+    "measure": {
+      "v1": {
+        "sw": 1280,
+        "cw": 1280,
+        "bsw": 1280,
+        "bcw": 1280,
+        "iw": 1280
+      },
+      "v2": {
+        "pos": "fixed",
+        "left": 505.3,
+        "width": 269.3,
+        "bottom": 884,
+        "radius": "999px",
+        "centerX": 640,
+        "shadow": true,
+        "iw": 1280
+      },
+      "v3": {
+        "display": "flex",
+        "cols": 2,
+        "aBottom": 360.5,
+        "bBottom": 442,
+        "aTop": 94.5,
+        "bTop": 94.5,
+        "aRight": 632,
+        "bLeft": 648,
+        "tallest": 184.5,
+        "bottomDiff": 81.5
+      },
+      "v8": {
+        "badCount": 0,
+        "bad": []
+      },
+      "v9": {
+        "text": "🤖 AI 教练",
+        "w": 211.1,
+        "font": "system-ui, -apple-system, \"Segoe UI\", \"Microsoft YaHei\", san"
+      }
+    },
+    "preview": null
+  },
+  {
+    "viewport": "1920x1080",
+    "page": "今日",
+    "pass": true,
+    "fails": [],
+    "measure": {
+      "v1": {
+        "sw": 1920,
+        "cw": 1920,
+        "bsw": 1920,
+        "bcw": 1920,
+        "iw": 1920
+      },
+      "v2": {
+        "pos": "fixed",
+        "left": 825.3,
+        "width": 269.3,
+        "bottom": 1064,
+        "radius": "999px",
+        "centerX": 960,
+        "shadow": true,
+        "iw": 1920
+      },
+      "v3": {
+        "display": "flex",
+        "cols": 2,
+        "aBottom": 922.5,
+        "bBottom": 826.5,
+        "aTop": 185.5,
+        "bTop": 185.5,
+        "aRight": 952,
+        "bLeft": 968,
+        "tallest": 566,
+        "bottomDiff": 96
+      },
+      "v5": {
+        "bx": 452,
+        "bw": 1016,
+        "px": 452,
+        "pw": 1016,
+        "text": "⚖️ 该测体重了 · 今天还没有记录（每"
+      },
+      "v8": {
+        "badCount": 0,
+        "bad": []
+      },
+      "v9": {
+        "text": "今日",
+        "w": 131.4,
+        "font": "system-ui, -apple-system, \"Segoe UI\", \"Microsoft YaHei\", san"
+      }
+    },
+    "preview": null
+  },
+  {
+    "viewport": "1920x1080",
+    "page": "数据",
+    "pass": true,
+    "fails": [],
+    "measure": {
+      "v1": {
+        "sw": 1920,
+        "cw": 1920,
+        "bsw": 1920,
+        "bcw": 1920,
+        "iw": 1920
+      },
+      "v2": {
+        "pos": "fixed",
+        "left": 825.3,
+        "width": 269.3,
+        "bottom": 1064,
+        "radius": "999px",
+        "centerX": 960,
+        "shadow": true,
+        "iw": 1920
+      },
+      "v8": {
+        "badCount": 0,
+        "bad": []
+      },
+      "v9": {
+        "text": "数据",
+        "w": 130.5,
+        "font": "system-ui, -apple-system, \"Segoe UI\", \"Microsoft YaHei\", san"
+      }
+    },
+    "preview": null
+  },
+  {
+    "viewport": "1920x1080",
+    "page": "阶段",
+    "pass": true,
+    "fails": [],
+    "measure": {
+      "v1": {
+        "sw": 1920,
+        "cw": 1920,
+        "bsw": 1920,
+        "bcw": 1920,
+        "iw": 1920
+      },
+      "v2": {
+        "pos": "fixed",
+        "left": 825.3,
+        "width": 269.3,
+        "bottom": 1064,
+        "radius": "999px",
+        "centerX": 960,
+        "shadow": true,
+        "iw": 1920
+      },
+      "v8": {
+        "badCount": 0,
+        "bad": []
+      },
+      "v9": {
+        "text": "阶段",
+        "w": 156,
+        "font": "system-ui, -apple-system, \"Segoe UI\", \"Microsoft YaHei\", san"
+      }
+    },
+    "preview": null
+  },
+  {
+    "viewport": "1920x1080",
+    "page": "训练",
+    "pass": true,
+    "fails": [],
+    "measure": {
+      "v1": {
+        "sw": 1920,
+        "cw": 1920,
+        "bsw": 1920,
+        "bcw": 1920,
+        "iw": 1920
+      },
+      "v2": {
+        "pos": "fixed",
+        "left": 825.3,
+        "width": 269.3,
+        "bottom": 1064,
+        "radius": "999px",
+        "centerX": 960,
+        "shadow": true,
+        "iw": 1920
+      },
+      "v8": {
+        "badCount": 0,
+        "bad": []
+      },
+      "v9": {
+        "text": "训练",
+        "w": 153.1,
+        "font": "system-ui, -apple-system, \"Segoe UI\", \"Microsoft YaHei\", san"
+      }
+    },
+    "preview": null
+  },
+  {
+    "viewport": "1920x1080",
+    "page": "设置",
+    "pass": true,
+    "fails": [],
+    "measure": {
+      "v1": {
+        "sw": 1920,
+        "cw": 1920,
+        "bsw": 1920,
+        "bcw": 1920,
+        "iw": 1920
+      },
+      "v2": {
+        "pos": "fixed",
+        "left": 825.3,
+        "width": 269.3,
+        "bottom": 1064,
+        "radius": "999px",
+        "centerX": 960,
+        "shadow": true,
+        "iw": 1920
+      },
+      "v4": {
+        "display": "grid",
+        "tracks": "501px 501px",
+        "secW": 501,
+        "aboutW": 1016,
+        "pageInnerW": 1016
+      },
+      "v8": {
+        "badCount": 0,
+        "bad": []
+      },
+      "v9": {
+        "text": "设置",
+        "w": 188.5,
+        "font": "system-ui, -apple-system, \"Segoe UI\", \"Microsoft YaHei\", san"
+      }
+    },
+    "preview": null
+  },
+  {
+    "viewport": "1920x1080",
+    "page": "教练",
+    "pass": true,
+    "fails": [],
+    "measure": {
+      "v1": {
+        "sw": 1920,
+        "cw": 1920,
+        "bsw": 1920,
+        "bcw": 1920,
+        "iw": 1920
+      },
+      "v2": {
+        "pos": "fixed",
+        "left": 825.3,
+        "width": 269.3,
+        "bottom": 1064,
+        "radius": "999px",
+        "centerX": 960,
+        "shadow": true,
+        "iw": 1920
+      },
+      "v3": {
+        "display": "flex",
+        "cols": 2,
+        "aBottom": 360.5,
+        "bBottom": 442,
+        "aTop": 94.5,
+        "bTop": 94.5,
+        "aRight": 952,
+        "bLeft": 968,
+        "tallest": 184.5,
+        "bottomDiff": 81.5
+      },
+      "v8": {
+        "badCount": 0,
+        "bad": []
+      },
+      "v9": {
+        "text": "🤖 AI 教练",
+        "w": 211.1,
+        "font": "system-ui, -apple-system, \"Segoe UI\", \"Microsoft YaHei\", san"
+      }
+    },
+    "preview": null
+  }
+]

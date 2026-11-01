@@ -1,0 +1,230 @@
+[
+  {
+    "id": "base",
+    "name": "测试前基线 records=8/workouts=1/habit_logs=2/coach_qa=1/coach_reports=2",
+    "pass": true,
+    "detail": "records=8"
+  },
+  {
+    "id": "R1",
+    "name": "手动录入 API",
+    "pass": true,
+    "detail": "status=200"
+  },
+  {
+    "id": "R1b",
+    "name": "录入字段完整可见",
+    "pass": true,
+    "detail": "{\"metric_code\":\"weight\",\"value\":77.77,\"unit\":\"kg\",\"at\":\"2026-11-01T08:00:00+08:00\",\"note\":\"qa\",\"source\":\"manual\"}"
+  },
+  {
+    "id": "R3",
+    "name": "手动编辑改值",
+    "pass": true,
+    "detail": "value=77.78 updated_at=2026-11-01T15:11:00.706Z"
+  },
+  {
+    "id": "R5",
+    "name": "LWW 旧版本不回滚",
+    "pass": true,
+    "detail": "applied=1 value=77.78"
+  },
+  {
+    "id": "R4",
+    "name": "手动删除软删墓碑",
+    "pass": true,
+    "detail": "GET不可见=true sync墓碑deleted=true"
+  },
+  {
+    "id": "R6",
+    "name": "AI 识别配置(真实模型 glm-5.3-flash)",
+    "pass": true,
+    "detail": "model=glm-5.3-flash demo=false key=set"
+  },
+  {
+    "id": "R7",
+    "name": "拍照识别-真实模型",
+    "pass": true,
+    "detail": "4481ms demo=false candidates=[{\"metric_hint\":\"体重\",\"value\":77.77,\"unit\":\"kg\",\"when\":\"2026-10-25\",\"confidence\":0.99,\"note\":\"智能体脂秤APP截图，测量时间为07:30(清晨空腹可能性大)；日期显示为2026年，如与实际不符请核对\",\"metric_code\":\"weight\",\"metric_name\":\"体重\",\"metric_uni"
+  },
+  {
+    "id": "R8",
+    "name": "拍照识别-空图 400",
+    "pass": true,
+    "detail": "status=400 body={\"detail\":\"图片为空\"}"
+  },
+  {
+    "id": "R10",
+    "name": "导入 chinese.csv preview",
+    "pass": true,
+    "detail": "format=csv total=4 mapped={\"体重/kg\":\"weight\",\"体脂率/%\":\"bodyfat\",\"腰围/cm\":\"waist\"} warnings=[[],[\"体脂率 0.249 为小数口径,已×100 转为百分比\"],[],[\"weight=999 超出合理范围(20~400),已跳过\"]]"
+  },
+  {
+    "id": "R10b",
+    "name": "preview 口径(小数体脂/斜杠日期/999剔除/坏日期行丢弃)",
+    "pass": true,
+    "detail": "[{\"at\":\"2026-10-19T23:30:00Z\",\"m\":{\"weight\":77.7,\"bodyfat\":25.1,\"waist\":88.5}},{\"at\":\"2026-10-20T23:31:00Z\",\"m\":{\"weight\":77.4,\"bodyfat\":24.9,\"waist\":88.2}},{\"at\":\"2026-10-21T23:45:00Z\",\"m\":{\"weight\":76.9,\"bodyfat\":24.8,\"waist\":87.8}},{\"at\":\"2026-10-23T00:00:00Z\",\"m\":{\"bodyfat\":23.9,\"waist\":87.5}}]"
+  },
+  {
+    "id": "R11",
+    "name": "commit imported=11 skipped=0(999已剔除行仍导其余指标)",
+    "pass": true,
+    "detail": "{\"imported\":11,\"skipped\":0}"
+  },
+  {
+    "id": "R11b",
+    "name": "导入记录 source=import/id 规则",
+    "pass": true,
+    "detail": "imp可见=11 样例={\"metric_code\":\"bodyfat\",\"value\":25.1,\"unit\":\"%\",\"at\":\"2025-10-19T23:30:00.000Z\",\"note\":\"qa-vf-import\",\"source\":\"import\"}"
+  },
+  {
+    "id": "R12",
+    "name": "重复 commit 幂等 imported=0(含墓碑占位口径,见缺陷 D5)",
+    "pass": true,
+    "detail": "原样={\"imported\":0,\"skipped\":11} 平移副本={\"imported\":0,\"skipped\":11}"
+  },
+  {
+    "id": "R13",
+    "name": "导入 export.zip preview(apple_health)",
+    "pass": true,
+    "detail": "format=apple_health total=3 mapped={\"HKQuantityTypeIdentifierBodyMass\":\"weight\",\"HKQuantityTypeIdentifierBodyFatPercentage\":\"bodyfat\",\"HKQuantityTypeIdentifierWaistCircumference\":\"waist\"}"
+  },
+  {
+    "id": "R14",
+    "name": "导入 huawei.json preview(huawei_json)",
+    "pass": true,
+    "detail": "format=huawei_json total=2 rows=[{\"at\":\"2026-01-20T10:10:00Z\",\"metrics\":{\"weight\":77.9,\"bodyfat\":22.5},\"warnings\":[]},{\"at\":\"2026-01-21T10:10:00Z\",\"metrics\":{\"weight\":77.6,\"bodyfat\":22.8},\"warnings\":[\"体脂率 0.228 为小数口径,已×100 转为百分比\"]}]"
+  },
+  {
+    "id": "R15",
+    "name": "导入坏文件 400 不 500",
+    "pass": true,
+    "detail": "status=400 body={\"detail\":\"未识别到时间列(支持:时间/日期/date/time/timestamp 等)\"}"
+  },
+  {
+    "id": "S1",
+    "name": "stage-suggestion suggested=s1",
+    "pass": true,
+    "detail": "suggested=s1 items=s1:0条,s2:2条,s3:2条"
+  },
+  {
+    "id": "S2",
+    "name": "阶段③腰围规则未命中 detail",
+    "pass": true,
+    "detail": "{\"text\":\"腰围 ≤ 85 cm(最近14天最新值)\",\"ok\":false,\"detail\":\"当前 96 cm\"}"
+  },
+  {
+    "id": "S3",
+    "name": "window 参数 7/30",
+    "pass": true,
+    "detail": "w7=s1 w30=s1"
+  },
+  {
+    "id": "I1",
+    "name": "insights rate_alert=null",
+    "pass": true,
+    "detail": "null"
+  },
+  {
+    "id": "I2",
+    "name": "insights plateau=null",
+    "pass": true,
+    "detail": "null"
+  },
+  {
+    "id": "I3",
+    "name": "insights protein 目标 124g",
+    "pass": true,
+    "detail": "{\"weight_kg\":88.5,\"stage_id\":\"s1\",\"range\":[1.2,1.6],\"target_g\":124,\"food_hint\":\"≈ 鸡胸肉 564g（按每100g约22g蛋白质）\",\"note\":\"普通阶段按1.2-1.6g/kg(依据知识库·蛋白质)\"}"
+  },
+  {
+    "id": "I5",
+    "name": "洞察文案引知识库",
+    "pass": true,
+    "detail": "keys=rate_alert,plateau,protein"
+  },
+  {
+    "id": "M1",
+    "name": "reminders weight due / waist due(≥7天)",
+    "pass": true,
+    "detail": "got=[{\"code\":\"weight\",\"name\":\"体重\",\"due\":true,\"reason\":\"今天还没有记录\",\"rule\":\"每天 1 次\"},{\"code\":\"waist\",\"name\":\"腰围\",\"due\":true,\"reason\":\"距上次测量已 7 天\",\"rule\":\"每周 1 次\"}] 推算today=2026-11-01 waist上次=2026-10-25(2026-10-25T13:15:00.000Z) 差=7天"
+  },
+  {
+    "id": "A1",
+    "name": "history 审计列表",
+    "pass": true,
+    "detail": "n=5 top={\"seq\":204,\"table\":\"records\",\"doc_id\":\"imp_waist_1761177600\",\"data\":{\"metric_code\":\"waist\",\"value\":87.5,\"unit\":\"cm\",\"at\":\"2025-10-23T00:00:00.000Z\",\"note\":\"qa-vf-import\",\"source\":\"import\"},\"updated_at\":\"2026-11-01T15:11:05.436Z\",\"deleted\":false,\"device\":\"import\",\"action\":\"update\",\"created_at\":\"2026-11-01T15:11:05.437Z\"}"
+  },
+  {
+    "id": "A2",
+    "name": "restore 空 delete 版本 400(D1 回归)",
+    "pass": true,
+    "detail": "status=400"
+  },
+  {
+    "id": "A3",
+    "name": "restore 正常版本 ok + 记录回来",
+    "pass": true,
+    "detail": "status=200 value=77.78"
+  },
+  {
+    "id": "A4",
+    "name": "快照列表 ≥2",
+    "pass": true,
+    "detail": "[{\"name\":\"snapshot-2026-10-26.json\",\"size\":20650},{\"name\":\"snapshot-2026-10-25.json\",\"size\":10887}]"
+  },
+  {
+    "id": "A5",
+    "name": "快照下载 200 + docs",
+    "pass": true,
+    "detail": "status=200 docs表=metrics,stages,habits,exercises,profile,records,habit_logs,probe,workouts,coach_reports"
+  },
+  {
+    "id": "A9",
+    "name": "快照路径越权 400/404",
+    "pass": true,
+    "detail": "status=404"
+  },
+  {
+    "id": "A6",
+    "name": "导出 JSON 200 全表",
+    "pass": true,
+    "detail": "tables=metrics,stages,habits,exercises,profile,records,habit_logs,probe,workouts,coach_reports,coach_qa"
+  },
+  {
+    "id": "A7",
+    "name": "导出 CSV 200 表头+行数",
+    "pass": true,
+    "detail": "lines=20"
+  },
+  {
+    "id": "P1",
+    "name": "manifest 200",
+    "pass": true,
+    "detail": "ct=application/manifest+json name=体重管理"
+  },
+  {
+    "id": "P2",
+    "name": "sw.js 200",
+    "pass": true,
+    "detail": "ct=text/javascript; charset=utf-8"
+  },
+  {
+    "id": "P3",
+    "name": "icon /icons/icon-192.png 200",
+    "pass": true,
+    "detail": "ct=image/png"
+  },
+  {
+    "id": "P3",
+    "name": "icon /icons/icon-512.png 200",
+    "pass": true,
+    "detail": "ct=image/png"
+  },
+  {
+    "id": "Z1",
+    "name": "API 段清理后 records 回 8",
+    "pass": true,
+    "detail": "imp清理=11条 records=8 值=96/25.8/25.1/89.4/89.1/88.9/88.7/88.5"
+  }
+]

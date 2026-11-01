@@ -200,6 +200,12 @@ const trendCode = ref('weight')
 const rangeDays = ref(90)
 const chartEl = ref(null)
 let chart = null
+// 窗口缩放/旋转后画布跟随:echarts 画布尺寸在 init 时固定,需监听 resize 重算(150ms debounce)
+let resizeTimer = null
+function onWinResize() {
+  clearTimeout(resizeTimer)
+  resizeTimer = setTimeout(() => { if (chart) chart.resize() }, 150)
+}
 
 const stageHist = computed(() => stageHistory())
 
@@ -231,7 +237,11 @@ function renderChart() {
     const cut = Date.now() - rangeDays.value * 86400000
     data = all.filter((r) => new Date(r.at).getTime() >= cut)
   }
-  if (!chart) chart = echarts.init(chartEl.value)
+  if (!chart || chart.getDom() !== chartEl.value) {
+    // 子标签 v-if 会销毁重建容器节点,旧实例可能挂在已脱离文档的旧节点上,先释放再初始化
+    if (chart) chart.dispose()
+    chart = echarts.init(chartEl.value)
+  }
   const series = [
     {
       name: '记录',
@@ -289,6 +299,7 @@ function renderChart() {
     yAxis,
     series,
   }, { notMerge: true })
+  chart.resize() // 刚切入趋势子标签/数据变更后容器尺寸可能已变,渲染完成再校正一次
 }
 
 watch([tab, trendCode, rangeDays], async () => {
@@ -419,6 +430,7 @@ function toLocalInput(d) {
 
 onMounted(async () => {
   window.addEventListener('wm-synced', onSync)
+  window.addEventListener('resize', onWinResize)
   await loadQueue()
   if (tab.value === 'trend') {
     await nextTick()
@@ -427,6 +439,8 @@ onMounted(async () => {
 })
 onUnmounted(() => {
   window.removeEventListener('wm-synced', onSync)
+  clearTimeout(resizeTimer)
+  window.removeEventListener('resize', onWinResize)
   if (chart) chart.dispose()
 })
 </script>

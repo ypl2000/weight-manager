@@ -5,7 +5,11 @@
   数据不足的维度如实标注,不编造。
 - stream_report(days): async generator,逐段 yield {"delta": 文本} 事件;
   流结束后把完整报告写入 docs 表 "coach_reports"(id=uuid, device="coach")。
-- stream_ask(question): AI 问答,事件同上,结束后写入 docs 表 "coach_qa"
+- stream_ask(question): AI 问答,两步确定性标注(D5):第一步非流式小调用判定问题
+  是否在知识库范围内(in_kb);第二步流式生成回答,in_kb=false 时由代码在正文开始前
+  确定性插入"（以下为知识库之外的补充）"(模型自带则不重复插入,库内误标则剥离)。
+  分类调用失败/超时 → 降级为迭代2现状的单步流式(不中断服务)。
+  事件同上,结束后写入 docs 表 "coach_qa"
   (id=uuid, data={at, question, answer, model}, device="coach"),done 带 qa_id。
   无 API Key 或调用失败时 yield {"error": 原因} 事件。
 - 系统提示词 = 回答策略 + 知识库正文(读 docs/知识汇总-整理版.md,截到
@@ -13,6 +17,7 @@
 """
 import datetime as dt
 import json
+import re
 import uuid
 from pathlib import Path
 
@@ -56,7 +61,9 @@ _REPORT_RULES = ('输出格式:中文 markdown,固定四节:## 趋势解读、##
                  '数据不足的维度如实说明"数据不足",禁止编造数值。')
 
 _ASK_RULES = ('请直接回答用户的上述问题:结论先行,给数字、说人话;若与用户数据相关,结合摘要给个性化建议;'
-              '回答总长不超过400字(软约束),中文 markdown。')
+              '回答总长不超过400字(软约束),中文 markdown。'
+              '回答的第一句必须注明依据来源:属于知识库范围的问题,开头注明出处章节(如"依据知识库·平台期");'
+              '超出知识库范围的问题,开头必须注明"(以下为知识库之外的补充)"。')
 
 
 def _system_prompt(extra_rules):
@@ -356,6 +363,79 @@ async def _stream_chat(api_key, base, payload):
         yield {"error": _mask(f"调用大模型失败:{e}", api_key)}
 
 
+# ---- 问答知识库范围判定(D5:确定性标注,不依赖模型自觉) ----
+
+# 库外标注:由代码确定性插入/校验,模型自带时不重复插入
+ASK_KB_PREFIX = "（以下为知识库之外的补充）\n"
+# 回答开头是否已带标注(容忍全/半角括号、冒号、空白)
+_LEAD_ANNOT = re.compile(r"^\s*[（(]\s*以下为知识库之外的补充\s*[)）]\s*[:：]?\s*\n?")
+
+
+def _classify_payload(model, system_prompt, question):
+    """D5 第一步:非流式小调用,只输出严格 JSON {"in_kb": true|false}。"""
+    return {
+        "model": model,
+        "messages": [{"role": "system", "content": system_prompt},
+                     {"role": "user", "content": "用户问题:" + question}],
+        "stream": False,
+        "temperature": 0,
+        "max_tokens": 256,
+        "thinking": {"type": "disabled"},
+        "reasoning_effort": "low",
+    }
+
+
+async def _chat_once(api_key, base, payload):
+    """非流式小调用:返回正文 content;任何失败(网络/超时/非200/坏响应)返回 None,不抛出。"""
+    try:
+        timeout = httpx.Timeout(20.0, connect=10.0)
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            r = await client.post(base + "/chat/completions", json=payload,
+                                  headers={"Authorization": "Bearer " + api_key})
+            if r.status_code != 200:
+                return None
+            msg = ((r.json().get("choices") or [{}])[0].get("message") or {})
+            return msg.get("content") or ""
+    except Exception:
+        return None
+
+
+async def _classify_in_kb(api_key, base, model, question):
+    """判定问题是否在知识库范围内(D5 第一步)。
+    返回 True/False;调用失败/超时返回 None(上层降级单步流式);
+    调用成功但解析不出 true/false → 按库内处理(返回 True,不加前缀)。"""
+    kb = knowledge_base()
+    if not kb:
+        return False  # 知识库为空:任何问题都算库外,标注由代码保证
+    system = ("你是知识库范围判定器,只判断用户问题是否属于下方知识库覆盖的主题范围,不回答问题。\n"
+              "判 true:知识库涉及的减脂主题(热量缺口、极端节食、断食与进餐频率、蛋白质摄入、"
+              "增肌减脂、高碳低碳/生酮、代谢下降、平台期等),以及结合用户体重/体脂等健康数据"
+              "做减脂指导的问题。\n"
+              "判 false:与减脂及用户健康数据无关的其他领域问题(如生物、物理、化学、烹饪、闲聊等)。\n"
+              '只输出严格 JSON,二选一:{"in_kb": true} 或 {"in_kb": false},不要输出任何其他内容。\n\n'
+              "=== 知识库 ===\n" + kb + "\n=== 知识库结束 ===")
+    text = await _chat_once(api_key, base, _classify_payload(model, system, question))
+    if text is None:
+        return None
+    m = (re.search(r'"in_kb"\s*:\s*(true|false)', text, re.IGNORECASE)
+         or re.search(r'\b(true|false)\b', text, re.IGNORECASE))
+    return m.group(1).lower() == "true" if m else True
+
+
+async def _ask_single_step(api_key, model, base, prompt, qa_id, question):
+    """降级路径:与迭代2现状一致的单步流式问答(库外标注依赖模型自觉)。"""
+    chunks = []
+    async for ev in _stream_chat(api_key, base, _payload(model, _system_prompt(_ASK_RULES), prompt)):
+        if "error" in ev:
+            yield ev
+            return
+        chunks.append(ev["delta"])
+        yield ev
+    yield await _finish(chunks, "coach_qa", qa_id,
+                        {"at": store.now_iso(), "question": question, "model": model},
+                        {"done": True, "qa_id": qa_id}, field="answer")
+
+
 async def _finish(chunks, table, doc_id, data, done_event, field="content"):
     """拼接正文并落库(周报存 content 字段,问答存 answer 字段);返回 done 事件。
     内容为空时返回 error 事件(不落库)。"""
@@ -393,7 +473,10 @@ async def stream_report(days):
 
 
 async def stream_ask(question):
-    """AI 问答:yield {"delta"} / {"error"} / {"done", "qa_id"} 事件。
+    """AI 问答(D5 两步确定性标注):yield {"delta"} / {"error"} / {"done", "qa_id"} 事件。
+    第一步:非流式小调用判定 in_kb(失败/超时 → 降级 _ask_single_step,不中断服务);
+    第二步:流式生成,in_kb=false 且模型未自带标注时,由代码在正文开始前确定性插入
+    ASK_KB_PREFIX;in_kb=true 却自带标注时确定性剥离,保证标注只由判定结果决定。
     用户数据摘要(近30天)与周报同源(build_summary)。"""
     api_key, model, base = _ai_cfg()
     if not api_key:
@@ -404,13 +487,61 @@ async def stream_ask(question):
     prompt = ("=== 用户数据摘要(最近30天,与周报同源) ===\n" + _summary_text(summary)
               + "\n=== 摘要结束 ===\n\n用户问题:" + question)
     qa_id = str(uuid.uuid4())
+
+    in_kb = await _classify_in_kb(api_key, base, model, question)
+    if in_kb is None:
+        # 分类调用失败/超时:降级为单步流式(现状行为),服务不中断
+        async for ev in _ask_single_step(api_key, model, base, prompt, qa_id, question):
+            yield ev
+        return
+
+    # 把判定结果告知模型,第一句"注明依据来源"才有确定指向
+    scope = ("(范围判定:该问题属于知识库范围,回答第一句注明依据的知识库章节,不要输出任何标注。)"
+             if in_kb else
+             "(范围判定:该问题超出知识库范围,请直接用通用知识回答,标注由系统统一添加。)")
+    prompt = prompt + "\n\n" + scope
+
     chunks = []
+    buf = ""        # 首段缓冲:判定模型是否自带标注,避免重复插入/库内误标
+    decided = False
     async for ev in _stream_chat(api_key, base, _payload(model, _system_prompt(_ASK_RULES), prompt)):
         if "error" in ev:
             yield ev
             return
-        chunks.append(ev["delta"])
-        yield ev
+        delta = ev["delta"]
+        if decided:
+            chunks.append(delta)
+            yield ev
+            continue
+        buf += delta
+        m = _LEAD_ANNOT.match(buf)
+        if m:
+            decided = True
+            if in_kb:
+                rest = buf[m.end():]  # 库内问题模型却自带标注 → 剥离
+                if rest:
+                    chunks.append(rest)
+                    yield {"delta": rest}
+            else:                     # 库外且模型自带 → 保留,不重复插入
+                chunks.append(buf)
+                yield {"delta": buf}
+            buf = ""
+        elif len(buf) >= 24 or "\n" in buf:
+            # 开头明显不是标注(缓冲够长或已换行):库外则由代码确定性插入
+            decided = True
+            if not in_kb:
+                chunks.append(ASK_KB_PREFIX)
+                yield {"delta": ASK_KB_PREFIX}
+            chunks.append(buf)
+            yield {"delta": buf}
+            buf = ""
+        # 既不够长也没换行:继续缓冲
+    if buf:  # 流结束时仍在缓冲(回答极短)
+        if not in_kb:
+            chunks.append(ASK_KB_PREFIX)
+            yield {"delta": ASK_KB_PREFIX}
+        chunks.append(buf)
+        yield {"delta": buf}
     yield await _finish(chunks, "coach_qa", qa_id,
                         {"at": store.now_iso(), "question": question, "model": model},
                         {"done": True, "qa_id": qa_id}, field="answer")

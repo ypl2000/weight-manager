@@ -1,0 +1,146 @@
+[
+  {
+    "id": "S0",
+    "name": "PWA 标题与今日页渲染",
+    "pass": true,
+    "detail": "title=体重管理 h1=今日"
+  },
+  {
+    "id": "M2",
+    "name": "今日页提醒横幅与 API 一致(due=weight+waist)",
+    "pass": true,
+    "detail": "banners=[\"⚖️ 该测体重了 · 今天还没有记录（每天 1 次）\",\"📏 该测腰围了 · 距上次测量已 7 天（每周 1 次）\"] due=[\"weight\",\"waist\"]"
+  },
+  {
+    "id": "I4",
+    "name": "今日页智能提示卡 124g/鸡胸肉/引知识库",
+    "pass": true,
+    "detail": "{\"protein\":\"124\",\"pill\":\"≈ 鸡胸肉 564g（按每100g约22g蛋白质）\",\"note\":\"普通阶段按1.2-1.6g/kg(依据知识库·蛋白质)\"}"
+  },
+  {
+    "id": "K1",
+    "name": "习惯勾选→habit_logs+1(done=1当日)→取消→复原",
+    "pass": true,
+    "detail": "tap={\"found\":true,\"name\":\"三餐规律·不乱加餐 · → 胰岛素敏感性\"} +1=true done=1 date=2026-11-01 复原=true"
+  },
+  {
+    "id": "R2",
+    "name": "UI 录入 77.77:toast+列表行+服务端≤8s",
+    "pass": true,
+    "detail": "toast=已保存 server=true row=true id=156ba79d-d3c8-465e-bec3-41055c820738"
+  },
+  {
+    "id": "M3a",
+    "name": "录入后\"该测体重了\"横幅消失",
+    "pass": true,
+    "detail": "banners=📏 该测腰围了 · 距上次测量已 7 天（每周 1 次）"
+  },
+  {
+    "id": "M3b",
+    "name": "删除后服务端消失+横幅复现",
+    "pass": true,
+    "detail": "toast=已删除 serverGone=true banners=⚖️ 该测体重了 · 今天还没有记录（每天 1 次）|📏 该测腰围了 · 距上次测量已 7 天（每周 1 次）"
+  },
+  {
+    "id": "K3",
+    "name": "有氧打卡(打卡成功,坚持就是胜利) 服务端+1 字段完整",
+    "pass": true,
+    "detail": "toast=打卡成功,坚持就是胜利 doc={\"date\":\"2026-10-25\",\"type\":\"cardio\",\"items\":[{\"name\":\"快走\",\"minutes\":35,\"hr\":null}],\"feel\":\"ok\",\"duration_min\":35,\"note\":\"\"}"
+  },
+  {
+    "id": "K4",
+    "name": "力量打卡(打卡成功,坚持就是胜利) 服务端+1",
+    "pass": true,
+    "detail": "toast=打卡成功,坚持就是胜利 sets=[{\"name\":\"高位下拉\",\"sets\":\"3×10×20kg\"}]"
+  },
+  {
+    "id": "K6",
+    "name": "本周进度 pills 随打卡/删除联动",
+    "pass": true,
+    "detail": "前=[\"有氧 本周 0/3 次\",\"力量 本周 0/2 次\"] 后=[\"有氧 本周 1/3 次\",\"力量 本周 1/2 次\"] 删后=[\"有氧 本周 0/3 次\",\"力量 本周 0/2 次\"]"
+  },
+  {
+    "id": "K5",
+    "name": "训练删除复原(2条)",
+    "pass": true,
+    "detail": "workouts回=true"
+  },
+  {
+    "id": "S4",
+    "name": "阶段页自动判定规则明细渲染(基线数据 4 规则全未命中:✓=0/✗=4 属预期,与 API 一致)",
+    "pass": true,
+    "detail": "{\"ok\":0,\"no\":4,\"sug\":true}"
+  },
+  {
+    "id": "S6",
+    "name": "手动切换 s1→s2→s1(已切换) profile 复原",
+    "pass": true,
+    "detail": "cur0=s1 cur2=s2 back=true"
+  },
+  {
+    "id": "S7",
+    "name": "阶段切换历史 +2 条且清理复原",
+    "pass": true,
+    "detail": "hist0=0 added=2 end=0"
+  },
+  {
+    "id": "A8",
+    "name": "设置分区齐全(资料/指标/习惯/AI识别/同步/提醒/导入/数据安全/关于)",
+    "pass": true,
+    "detail": "n=9 [\"个人资料(影响阈值与 BMI)\",\"指标管理(可增可改)\",\"饮食·习惯清单管理\",\"AI 识别(拍照提取数据)\",\"同步(手机 ↔ 电脑)\",\"测量提醒(桌面通知)\",\"批量导入历史数据\",\"数据安全:访问码 · 历史回滚 · 快照\",\"关于\"]"
+  },
+  {
+    "id": "R6b",
+    "name": "AI 识别分区(base_url/模型/Key)",
+    "pass": true,
+    "detail": "{\"inputs\":[\"text\",\"text\",\"password\",\"checkbox\"],\"hasKey\":true}"
+  },
+  {
+    "id": "M5",
+    "name": "通知开关 headless 拒绝分支(浏览器拦截了通知权限)",
+    "pass": true,
+    "detail": "perm=denied toast=浏览器拦截了通知权限 wmNotify=null"
+  },
+  {
+    "id": "R10c",
+    "name": "UI 导入预览 6 列表格+格式 chip",
+    "pass": true,
+    "detail": "{\"chip\":\"CSV\",\"ths\":[\"时间\",\"体重\",\"体脂率\",\"腰围\",\"臀围\",\"内脏脂肪\"],\"rows\":6,\"tableW\":451,\"wrapScrollW\":451,\"wrapClientW\":451}"
+  },
+  {
+    "id": "R10d",
+    "name": "导入预览取消清除",
+    "pass": true,
+    "detail": "gone=true"
+  },
+  {
+    "id": "R9a",
+    "name": "拍照识别 UI:候选区渲染(真实模型 77.77)",
+    "pass": true,
+    "detail": "picked={\"hasPreview\":true,\"demoBanner\":false} cand={\"hint\":\"体重 · 置信 98%\",\"value\":\"77.77\",\"metricSel\":\"weight\",\"note\":\"来源为智能体脂秤显示界面，标注为今日测量，测量时间07:30\"}"
+  },
+  {
+    "id": "R9b",
+    "name": "候选确认入库 source=ai(识别完成,请确认结果)",
+    "pass": true,
+    "detail": "toast=识别完成,请确认结果 doc={\"metric_code\":\"weight\",\"value\":77.77,\"unit\":\"kg\",\"at\":\"2026-10-25T04:00:00.000Z\",\"note\":\"AI识别:来源为智能体脂秤显示界面，标注为今日测量，测量时间07:30\",\"source\":\"ai\"}"
+  },
+  {
+    "id": "R9c",
+    "name": "识别测试记录清理复原",
+    "pass": true,
+    "detail": "records=8"
+  },
+  {
+    "id": "C9",
+    "name": "教练页分区(生成解读/问教练/问答历史/历史解读)",
+    "pass": true,
+    "detail": "生成解读|问答历史|问教练|历史解读"
+  },
+  {
+    "id": "P5",
+    "name": "五页 h1 渲染无白屏",
+    "pass": true,
+    "detail": "{\"数据\":\"数据\",\"阶段\":\"阶段\",\"训练\":\"训练\",\"设置\":\"设置\"}"
+  }
+]
